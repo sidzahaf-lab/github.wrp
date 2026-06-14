@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMSimplex — Processus Weekly Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0F1117;
+    --bg2:       #161923;
+    --bg3:       #1E2330;
+    --border:    rgba(255,255,255,0.08);
+    --border2:   rgba(255,255,255,0.14);
+    --text:      #E8E6F0;
+    --text2:     #9997AB;
+    --text3:     #5E5C70;
+    --purple:    #7F77DD;
+    --purple-l:  #AFA9EC;
+    --purple-d:  #534AB7;
+    --purple-bg: rgba(127,119,221,0.12);
+    --teal:      #1D9E75;
+    --teal-l:    #5DCAA5;
+    --teal-bg:   rgba(29,158,117,0.12);
+    --amber:     #EF9F27;
+    --amber-bg:  rgba(239,159,39,0.12);
+    --coral:     #D85A30;
+    --coral-bg:  rgba(216,90,48,0.12);
+    --blue:      #378ADD;
+    --blue-bg:   rgba(55,138,221,0.12);
+    --radius:    6px;
+    --radius-lg: 10px;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .logo-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .sidebar-logo .logo-sub {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--purple);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 16px 18px 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: background .15s, border-color .15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.04); }
+  .nav-item.active {
+    background: var(--purple-bg);
+    border-left-color: var(--purple);
+  }
+  .nav-item .nav-num {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--purple);
+    font-family: 'IBM Plex Mono', monospace;
+    padding-top: 1px;
+    min-width: 22px;
+  }
+  .nav-item .nav-label {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+  .nav-item.active .nav-label { color: var(--purple-l); }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.6;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── MAIN ─────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-step {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--purple);
+    background: var(--purple-bg);
+    border: 1px solid rgba(127,119,221,0.25);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .05em;
+  }
+  .topbar-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-deadline {
+    font-size: 11px;
+    color: var(--amber);
+    background: var(--amber-bg);
+    border: 1px solid rgba(239,159,39,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .nav-arrows { display: flex; gap: 6px; }
+  .arrow-btn {
+    width: 28px; height: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .arrow-btn:hover { background: var(--purple-bg); color: var(--purple-l); }
+
+  /* ── DIAGRAM CONTAINER ─────────────────────────────── */
+  .diagram-container {
+    flex: 1;
+    overflow: auto;
+    padding: 28px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  /* ── SWIMLANE ──────────────────────────────────────── */
+  .swimlane-wrap {
+    display: none;
+    min-width: 900px;
+  }
+  .swimlane-wrap.active { display: block; }
+
+  .view-desc {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 760px;
+  }
+  .gains-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .gain-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .chip-trad { background: var(--coral-bg); color: #F0997B; border: 1px solid rgba(216,90,48,0.25); }
+  .chip-pms  { background: var(--teal-bg);  color: var(--teal-l); border: 1px solid rgba(29,158,117,0.25); }
+
+  /* SVG swimlane styles */
+  .sl-svg { width: 100%; overflow: visible; }
+
+  /* ── LEGEND ────────────────────────────────────────── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-line { width: 24px; height: 2px; border-radius: 1px; flex-shrink: 0; }
+  .legend-dash { width: 24px; height: 0; border-top: 2px dashed; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SIDEBAR                                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-name">PMSimplex</div>
+    <div class="logo-sub">Weekly Report Process</div>
+  </div>
+  <div class="sidebar-section-label">Vues du processus</div>
+
+  <div class="nav-item active" onclick="showView(0)">
+    <span class="nav-num">V00</span>
+    <span class="nav-label">Vue d'ensemble — Vue globale du cycle</span>
+  </div>
+  <div class="nav-item" onclick="showView(1)">
+    <span class="nav-num">V01</span>
+    <span class="nav-label">Collecte des données terrain</span>
+  </div>
+  <div class="nav-item" onclick="showView(2)">
+    <span class="nav-num">V02</span>
+    <span class="nav-label">Mise à jour planning P6</span>
+  </div>
+  <div class="nav-item" onclick="showView(3)">
+    <span class="nav-num">V03</span>
+    <span class="nav-label">Calcul EVM & indicateurs</span>
+  </div>
+  <div class="nav-item" onclick="showView(4)">
+    <span class="nav-num">V04</span>
+    <span class="nav-label">Rédaction Weekly Report</span>
+  </div>
+  <div class="nav-item" onclick="showView(5)">
+    <span class="nav-num">V05</span>
+    <span class="nav-label">Revue & approbation</span>
+  </div>
+  <div class="nav-item" onclick="showView(6)">
+    <span class="nav-num">V06</span>
+    <span class="nav-label">Distribution & archivage DMS</span>
+  </div>
+  <div class="nav-item" onclick="showView(7)">
+    <span class="nav-num">V07</span>
+    <span class="nav-label">Cadence & gains PMSimplex</span>
+  </div>
+
+  <div class="sidebar-footer">
+    Moteur déterministe EVM/CPM<br>
+    Zéro LLM sur données critiques<br>
+    © PMSimplex 2026
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- MAIN                                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-step" id="topbar-step">V00</span>
+      <span class="topbar-title" id="topbar-title">Vue d'ensemble — Cycle hebdomadaire</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-deadline" id="topbar-deadline">Cycle : Dim → Mar</span>
+      <div class="nav-arrows">
+        <button class="arrow-btn" onclick="prevView()" title="Vue précédente">&#8592;</button>
+        <button class="arrow-btn" onclick="nextView()" title="Vue suivante">&#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram-container">
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V00 — VUE D'ENSEMBLE                           -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap active" id="view-0">
+      <p class="view-desc">Vue macro du cycle hebdomadaire complet. Chaque colonne représente un acteur du projet. Les flux colorés distinguent les échanges de données terrain (amber), les calculs moteur (purple), les validations humaines (teal) et les publications officielles (blue).</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : 3–4 jours, fichiers dispersés, erreurs manuelles</span>
+        <span class="gain-chip chip-pms">✓ PMSimplex : cycle complet en &lt; 6h, traçabilité totale</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- Actor headers -->
+        <rect x="0" y="0" width="1060" height="48" rx="0" fill="#1E2330"/>
+
+        <!-- Actor columns (6) -->
+        <!-- Col widths: 0-149 | 150-309 | 310-469 | 470-629 | 630-789 | 790-1059 -->
+        <line x1="150" y1="0" x2="150" y2="620" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="310" y1="0" x2="310" y2="620" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="470" y1="0" x2="470" y2="620" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="630" y1="0" x2="630" y2="620" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="790" y1="0" x2="790" y2="620" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <!-- Actor labels -->
+        <text x="75"   y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Discipline Leads</text>
+        <text x="230"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning</text>
+        <text x="230"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Engineer</text>
+        <text x="390"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex</text>
+        <text x="390"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">Engine</text>
+        <text x="550"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Project</text>
+        <text x="550"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Manager</text>
+        <text x="710"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Document</text>
+        <text x="710"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Control</text>
+        <text x="925"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Client /</text>
+        <text x="925"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">PMC</text>
+
+        <!-- ── STEP BOXES ── -->
+
+        <!-- Step 1: Saisie terrain (Discipline Leads) -->
+        <rect x="12" y="75" width="126" height="48" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2"/>
+        <text x="75" y="97" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">1. Saisie terrain</text>
+        <text x="75" y="112" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">% avancement / écarts</text>
+
+        <!-- Step 2: Upload P6 (Planning Engineer) -->
+        <rect x="162" y="75" width="136" height="48" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="230" y="97" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">2. Upload XER + data</text>
+        <text x="230" y="112" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">import P6 / data date</text>
+
+        <!-- Step 3: Engine calcul (PMSimplex) -->
+        <rect x="322" y="75" width="136" height="48" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="390" y="97" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">3. Calcul EVM / CPM</text>
+        <text x="390" y="112" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">SPI · CPI · EAC · Float</text>
+
+        <!-- Step 4: Review résultats (Planning Engineer) -->
+        <rect x="162" y="170" width="136" height="48" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="230" y="192" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">4. Analyse écarts</text>
+        <text x="230" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Float · chemin critique</text>
+
+        <!-- Step 5: Draft rapport (PMSimplex AI draft) -->
+        <rect x="322" y="170" width="136" height="48" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="390" y="192" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">5. Génération draft</text>
+        <text x="390" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">narratif IA + tableaux</text>
+
+        <!-- Step 6: Validation PM -->
+        <rect x="482" y="170" width="136" height="48" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="550" y="192" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">6. Validation PM</text>
+        <text x="550" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">revue + corrections</text>
+
+        <!-- Step 7: Correction si besoin (Planning Eng) -->
+        <rect x="162" y="265" width="136" height="48" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="230" y="287" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">7. Finalisation V2</text>
+        <text x="230" y="302" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">intégration retours</text>
+
+        <!-- Step 8: Approbation PM -->
+        <rect x="482" y="265" width="136" height="48" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="550" y="287" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">8. Approbation</text>
+        <text x="550" y="302" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">signature PM / indice A</text>
+
+        <!-- Step 9: Enregistrement DMS -->
+        <rect x="642" y="265" width="136" height="48" rx="6" fill="#1E2330" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="710" y="287" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#85B7EB">9. Enreg. DMS</text>
+        <text x="710" y="302" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">indice + transmittal</text>
+
+        <!-- Step 10: Transmission client -->
+        <rect x="642" y="360" width="136" height="48" rx="6" fill="#1E2330" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="710" y="382" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#85B7EB">10. Transmission</text>
+        <text x="710" y="397" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">liste distribution contrat</text>
+
+        <!-- Step 11: Réception Client -->
+        <rect x="802" y="360" width="136" height="48" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="870" y="382" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">11. Réception client</text>
+        <text x="870" y="397" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">accusé de réception</text>
+
+        <!-- Step 12: Archive snapshot -->
+        <rect x="322" y="455" width="136" height="48" rx="6" fill="rgba(127,119,221,0.10)" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="390" y="477" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">12. Snapshot P6</text>
+        <text x="870" y="497" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB"></text>
+        <text x="390" y="492" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">archivage data date</text>
+
+        <!-- ── ARROWS ── -->
+        <!-- 1→2: terrain vers planning eng -->
+        <line x1="138" y1="99" x2="160" y2="99" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 2→3: upload vers engine -->
+        <line x1="298" y1="99" x2="320" y2="99" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 3→4: engine résultats vers planning -->
+        <line x1="390" y1="123" x2="390" y2="148" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="390" y1="148" x2="298" y2="148" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="298" y1="148" x2="298" y2="168" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 3→5: engine génère draft -->
+        <line x1="390" y1="123" x2="390" y2="168" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 5→6: draft vers PM -->
+        <line x1="458" y1="194" x2="480" y2="194" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 6→7: PM renvoie corrections -->
+        <line x1="550" y1="218" x2="550" y2="245" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="550" y1="245" x2="298" y2="245" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="298" y1="245" x2="298" y2="263" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 7→8: finalisation vers PM approbation -->
+        <line x1="298" y1="289" x2="480" y2="289" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 8→9: approbation vers doc control -->
+        <line x1="618" y1="289" x2="640" y2="289" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 9→10: DMS vers transmission -->
+        <line x1="710" y1="313" x2="710" y2="358" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- 10→11: transmission vers client -->
+        <line x1="778" y1="384" x2="800" y2="384" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah0)"/>
+        <!-- Engine→snapshot -->
+        <line x1="390" y1="123" x2="390" y2="145" stroke="#534AB7" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="390" y1="430" x2="390" y2="453" stroke="#534AB7" stroke-width="1" marker-end="url(#ah0)"/>
+
+        <!-- Day labels on left -->
+        <text x="4" y="68" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">DIM</text>
+        <text x="4" y="165" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">LUN</text>
+        <text x="4" y="260" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">MAR</text>
+        <text x="4" y="355" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">MAR</text>
+        <line x1="0" y1="58" x2="1060" y2="58" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="153" x2="1060" y2="153" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="248" x2="1060" y2="248" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="343" x2="1060" y2="343" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="438" x2="1060" y2="438" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <text x="4" y="450" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">CLÔTURE</text>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#EF9F27"></div>Données terrain</div>
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Calcul moteur PMSimplex</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Validation / approbation humaine</div>
+        <div class="legend-item"><div class="legend-line" style="background:#378ADD"></div>Publication officielle</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#7F77DD"></div>Flux interne / retour</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#534AB7"></div>Snapshot / archivage auto</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V01 — COLLECTE TERRAIN                         -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-1">
+      <p class="view-desc">Collecte structurée des données d'avancement. PMSimplex remplace l'agrégation manuelle par des formulaires disciplinaires avec validation de cohérence automatique avant toute consolidation.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Emails / Excel dispersés — consolidation 4h à 6h</span>
+        <span class="gain-chip chip-pms">✓ Formulaires structurés — consolidation automatique &lt;15 min</span>
+        <span class="gain-chip chip-pms">✓ Méthode de mesure verrouillée sur baseline</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 580" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- Header -->
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <!-- Columns: 0-199 | 200-449 | 450-699 | 700-1059 -->
+        <line x1="200" y1="0" x2="200" y2="580" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="450" y1="0" x2="450" y2="580" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="700" y1="0" x2="700" y2="580" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <!-- Actors -->
+        <text x="100"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Discipline Leads</text>
+        <text x="100"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5E5C70">Civil · Méca · Élec · Inst</text>
+        <text x="325"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex</text>
+        <text x="325"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">Workflow + Validation</text>
+        <text x="575"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning Engineer</text>
+        <text x="575"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5E5C70">Supervision collecte</text>
+        <text x="880"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Système / DMS</text>
+        <text x="880"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5E5C70">Snapshot immuable</text>
+
+        <!-- Row guides -->
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="160" x2="1060" y2="160" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="260" x2="1060" y2="260" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="360" x2="1060" y2="360" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="460" x2="1060" y2="460" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <!-- Row labels -->
+        <text x="4" y="75" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">INIT</text>
+        <text x="4" y="175" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">SAISIE</text>
+        <text x="4" y="275" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">VALID.</text>
+        <text x="4" y="375" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ALERTES</text>
+        <text x="4" y="475" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">CLÔTURE</text>
+
+        <!-- 1: Déclenchement workflow (PMSimplex) -->
+        <rect x="212" y="68" width="226" height="52" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="325" y="90" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Déclenchement cycle collecte</text>
+        <text x="325" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Notification automatique dim. 18h00</text>
+
+        <!-- Arrow: PMSimplex notifie Leads -->
+        <line x1="212" y1="94" x2="148" y2="94" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- 2: Réception notif (Discipline Leads) -->
+        <rect x="14" y="68" width="172" height="52" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2"/>
+        <text x="100" y="90" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">Réception notification</text>
+        <text x="100" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">lien formulaire par discipline</text>
+
+        <!-- 3: Saisie % avancement (Leads) -->
+        <rect x="14" y="168" width="172" height="72" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2"/>
+        <text x="100" y="190" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">Saisie avancement</text>
+        <text x="100" y="206" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">% par activité WBS</text>
+        <text x="100" y="220" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">statut · cause écart</text>
+
+        <!-- Arrow: Lead soumet →  Engine -->
+        <line x1="186" y1="204" x2="210" y2="204" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- 4: Validation cohérence (PMSimplex) -->
+        <rect x="212" y="168" width="226" height="72" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="325" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Validation auto cohérence</text>
+        <text x="325" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">cross-check heures AC vs EV déclaré</text>
+        <text x="325" y="222" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">méthode mesure verrouillée baseline</text>
+
+        <!-- Arrow: Engine → Planning Eng résultat -->
+        <line x1="438" y1="204" x2="462" y2="204" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- 5: Planning Eng supervise (Planning Eng) -->
+        <rect x="464" y="168" width="224" height="72" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="576" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Supervision collecte</text>
+        <text x="576" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">suivi taux de complétion</text>
+        <text x="576" y="222" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">relance si saisie manquante</text>
+
+        <!-- 6: Alerte CPI / incohérence (PMSimplex → Leads) -->
+        <rect x="212" y="270" width="226" height="72" rx="6" fill="rgba(216,90,48,0.12)" stroke="#D85A30" stroke-width="1.2"/>
+        <text x="325" y="293" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#F0997B">Alerte incohérence</text>
+        <text x="325" y="309" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">CPI &lt; 0.7 ou &gt; 1.3 → flag</text>
+        <text x="325" y="324" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">activité bloquée sans justification</text>
+
+        <!-- Arrow: Alerte → Lead pour correction -->
+        <line x1="212" y1="306" x2="188" y2="306" stroke="#D85A30" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- 7: Correction lead -->
+        <rect x="14" y="270" width="172" height="72" rx="6" fill="#1E2330" stroke="#D85A30" stroke-width="1.2"/>
+        <text x="100" y="293" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#F0997B">Correction / justification</text>
+        <text x="100" y="309" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">lead corrige ou valide avec</text>
+        <text x="100" y="324" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">commentaire explicatif</text>
+
+        <!-- Arrow correction re-submit -->
+        <line x1="186" y1="290" x2="210" y2="290" stroke="#EF9F27" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah1)"/>
+
+        <!-- 8: Gel snapshot (PMSimplex + DMS) -->
+        <rect x="212" y="370" width="226" height="72" rx="6" fill="rgba(127,119,221,0.10)" stroke="#534AB7" stroke-width="1" stroke-dasharray="5 3"/>
+        <text x="325" y="393" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">Consolidation &amp; gel</text>
+        <text x="325" y="409" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">fermeture période dim. 23h59</text>
+        <text x="325" y="424" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">snapshot horodaté immuable</text>
+
+        <!-- Arrow → DMS -->
+        <line x1="438" y1="406" x2="712" y2="406" stroke="#534AB7" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- 9: DMS archive snapshot -->
+        <rect x="714" y="370" width="200" height="72" rx="6" fill="#1E2330" stroke="#534AB7" stroke-width="1.2"/>
+        <text x="814" y="393" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">Archivage snapshot</text>
+        <text x="814" y="409" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">chaque donnée datée + signée</text>
+        <text x="814" y="424" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">base audit / réclamation</text>
+
+        <!-- Arrow: Gel → Planning Eng (données prêtes) -->
+        <line x1="325" y1="370" x2="325" y2="350" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="325" y1="350" x2="576" y2="350" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="576" y1="350" x2="576" y2="242" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah1)"/>
+
+        <!-- Note: transition vers V02 -->
+        <rect x="212" y="468" width="500" height="44" rx="6" fill="rgba(29,158,117,0.08)" stroke="rgba(29,158,117,0.3)" stroke-width="1"/>
+        <text x="462" y="487" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#1D9E75">→ Données consolidées transmises au moteur EVM/CPM — début V02</text>
+        <text x="462" y="502" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Lundi 08h00 — mise à jour planning P6</text>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#EF9F27"></div>Données terrain (saisie leads)</div>
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Workflow PMSimplex</div>
+        <div class="legend-item"><div class="legend-line" style="background:#D85A30"></div>Alerte / incohérence</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#534AB7"></div>Archivage auto immuable</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V02 — MISE À JOUR PLANNING P6                  -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-2">
+      <p class="view-desc">Mise à jour du planning courant dans PMSimplex. Le XER est importé, la data date avancée, le CPM recalculé. Le Planning Engineer analyse les dérives de float et chemin critique avant de valider.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : saisie P6 manuelle 2h — risque d'erreur sur contraintes</span>
+        <span class="gain-chip chip-pms">✓ Import XER structuré — vérification contraintes automatique</span>
+        <span class="gain-chip chip-pms">✓ Snapshot avant/après pour comparaison instantanée</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <line x1="220" y1="0" x2="220" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="500" y1="0" x2="500" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="760" y1="0" x2="760" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="110"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning Engineer</text>
+        <text x="360"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex Engine</text>
+        <text x="360"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">CPM · Contraintes · Float</text>
+        <text x="630"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Revue &amp; Validation</text>
+        <text x="910"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Archivage</text>
+
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="160" x2="1060" y2="160" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="260" x2="1060" y2="260" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="360" x2="1060" y2="360" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="460" x2="1060" y2="460" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <text x="4" y="75"  font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">IMPORT</text>
+        <text x="4" y="175" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">CALCUL</text>
+        <text x="4" y="275" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ANALYSE</text>
+        <text x="4" y="375" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">LOOK-AH.</text>
+        <text x="4" y="475" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">VALID.</text>
+
+        <!-- 1: Gel version précédente (Eng) -->
+        <rect x="14" y="68" width="194" height="52" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="111" y="90" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Gel baseline courante</text>
+        <text x="111" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">sauvegarde version N-1</text>
+
+        <!-- Arrow → Engine -->
+        <line x1="208" y1="94" x2="232" y2="94" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 2: Import XER + data date (Engine) -->
+        <rect x="234" y="68" width="254" height="52" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="361" y="90" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Import XER + Actual Start/Finish</text>
+        <text x="361" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">data date avancée · % saisie V01 injectée</text>
+
+        <!-- 3: Recalcul CPM (Engine) -->
+        <rect x="234" y="168" width="254" height="72" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="361" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Recalcul CPM</text>
+        <text x="361" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">nouvelles dates prévisionnelles</text>
+        <text x="361" y="222" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Total Float · Free Float · Critical Path</text>
+
+        <!-- Arrow import → calcul -->
+        <line x1="361" y1="120" x2="361" y2="166" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 4: Vérif contraintes (Engine) -->
+        <rect x="514" y="168" width="234" height="72" rx="6" fill="rgba(216,90,48,0.10)" stroke="#D85A30" stroke-width="1.2"/>
+        <text x="631" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#F0997B">Vérification contraintes</text>
+        <text x="631" y="207" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">contraintes dures bloquantes</text>
+        <text x="631" y="222" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">liens logiques incohérents flaggés</text>
+
+        <!-- Arrow CPM → Vérif -->
+        <line x1="488" y1="204" x2="512" y2="204" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 5: Analyse écarts (Revue) -->
+        <rect x="514" y="270" width="234" height="72" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="631" y="293" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Analyse dérives</text>
+        <text x="631" y="309" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">nouvelles fins prévisionnelles vs baseline</text>
+        <text x="631" y="324" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">glissement critique path signalé</text>
+
+        <!-- Arrow vérif → analyse -->
+        <line x1="631" y1="240" x2="631" y2="268" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 6: Look-Ahead 3S (Engine) -->
+        <rect x="234" y="370" width="254" height="72" rx="6" fill="rgba(127,119,221,0.12)" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="361" y="393" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Génération Look-Ahead</text>
+        <text x="361" y="409" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">S+1 / S+2 / S+3 avec ressources</text>
+        <text x="361" y="424" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">prérequis manquants identifiés</text>
+
+        <!-- Arrow analyse → look-ahead -->
+        <line x1="631" y1="342" x2="631" y2="362" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="631" y1="362" x2="488" y2="362" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="488" y1="362" x2="488" y2="404" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="488" y1="406" x2="490" y2="406" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 7: Validation Eng + publication interne -->
+        <rect x="14" y="468" width="194" height="72" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="111" y="491" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Validation &amp; diffusion</text>
+        <text x="111" y="507" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">planning mis à jour diffusé</text>
+        <text x="111" y="522" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">aux discipline leads pour ack</text>
+
+        <!-- Arrow look-ahead → validation -->
+        <line x1="361" y1="442" x2="361" y2="462" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="361" y1="462" x2="111" y2="462" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="111" y1="462" x2="111" y2="466" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+        <!-- 8: Sauvegarde snapshot (Archive) -->
+        <rect x="774" y="468" width="200" height="72" rx="6" fill="#1E2330" stroke="#534AB7" stroke-width="1" stroke-dasharray="5 3"/>
+        <text x="874" y="491" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">Snapshot P6 sauvegardé</text>
+        <text x="874" y="507" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">fichier P6 + data date archivés</text>
+        <text x="874" y="522" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">comparaison future possible</text>
+
+        <!-- Arrow validation → archive -->
+        <line x1="208" y1="504" x2="772" y2="504" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah2)"/>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Flux moteur CPM</div>
+        <div class="legend-item"><div class="legend-line" style="background:#D85A30"></div>Alerte contrainte / blocage</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Validation humaine</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#534AB7"></div>Archivage snapshot auto</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V03 — CALCUL EVM & INDICATEURS                 -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-3">
+      <p class="view-desc">Calcul complet des indicateurs EVM par le moteur déterministe PMSimplex. BCWS, BCWP, ACWP, SPI, CPI, SPI(t), EAC — tous calculés selon la méthode définie en baseline. Zéro saisie manuelle, zéro interprétation subjective.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : calcul EVM sur Excel 3h — formules fragiles, erreurs propagées</span>
+        <span class="gain-chip chip-pms">✓ Calcul automatique en &lt; 30 sec — 6 méthodes de mesure supportées</span>
+        <span class="gain-chip chip-pms">✓ SPI(t) Earned Schedule calculé — plus fiable en fin de projet</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 540" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <line x1="200" y1="0" x2="200" y2="540" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="480" y1="0" x2="480" y2="540" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="740" y1="0" x2="740" y2="540" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="100"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning Engineer</text>
+        <text x="340"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex Engine</text>
+        <text x="340"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">EVM · Earned Schedule</text>
+        <text x="610"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Project Manager</text>
+        <text x="900"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Dashboard PMSimplex</text>
+
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="175" x2="1060" y2="175" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="300" x2="1060" y2="300" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="415" x2="1060" y2="415" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <text x="4" y="75"  font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">INPUT</text>
+        <text x="4" y="190" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">CALCUL</text>
+        <text x="4" y="315" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">SORTIE</text>
+        <text x="4" y="430" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ALERTE</text>
+
+        <!-- Inputs -->
+        <rect x="14" y="68" width="174" height="88" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2"/>
+        <text x="101" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">Inputs validés</text>
+        <text x="101" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">BCWS (baseline)</text>
+        <text x="101" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">% avancement réel V01</text>
+        <text x="101" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">AC (heures pointées)</text>
+
+        <line x1="188" y1="112" x2="212" y2="112" stroke="#EF9F27" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- Engine EVM -->
+        <rect x="214" y="68" width="254" height="88" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="341" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Calcul EVM complet</text>
+        <text x="341" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">EV = BAC × % physique</text>
+        <text x="341" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">SPI = EV/PV · CPI = EV/AC</text>
+        <text x="341" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">SPI(t) Earned Schedule · EAC</text>
+
+        <!-- Dashboard -->
+        <rect x="754" y="68" width="290" height="88" rx="6" fill="rgba(127,119,221,0.08)" stroke="#534AB7" stroke-width="1.2"/>
+        <text x="899" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">Dashboard temps réel</text>
+        <text x="899" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Courbe S — Baseline / Actuel / Forecast</text>
+        <text x="899" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Tableau SPI · CPI · VAC · TCPI</text>
+        <text x="899" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Visible PM + Planning Eng en simultané</text>
+
+        <line x1="468" y1="112" x2="752" y2="112" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- 6 methodes mesure -->
+        <rect x="214" y="183" width="254" height="108" rx="6" fill="rgba(127,119,221,0.10)" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="341" y="203" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">6 méthodes de mesure</text>
+        <text x="341" y="219" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">① Jalons pondérés</text>
+        <text x="341" y="234" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">② Pourcentage d'avancement</text>
+        <text x="341" y="249" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">③ Unités complétées</text>
+        <text x="341" y="264" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">④ Niveau d'effort · ⑤ 50/50 · ⑥ 0/100</text>
+        <text x="341" y="279" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">méthode verrouillée par activité en baseline</text>
+
+        <line x1="341" y1="156" x2="341" y2="181" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- Outputs -->
+        <rect x="494" y="183" width="234" height="108" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="611" y="203" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Sorties pour rapport</text>
+        <text x="611" y="219" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Courbe S exportable</text>
+        <text x="611" y="234" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Tableau indicateurs hebdo</text>
+        <text x="611" y="249" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Forecast EAC recalculé</text>
+        <text x="611" y="264" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Variances SV / CV / VAC</text>
+        <text x="611" y="279" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">→ injectées V04 rapport</text>
+
+        <line x1="468" y1="237" x2="492" y2="237" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- Alertes PM -->
+        <rect x="494" y="308" width="234" height="88" rx="6" fill="rgba(216,90,48,0.10)" stroke="#D85A30" stroke-width="1.2"/>
+        <text x="611" y="328" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#F0997B">Alertes automatiques PM</text>
+        <text x="611" y="344" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">SPI &lt; 0.85 → alerte planning</text>
+        <text x="611" y="359" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">CPI &lt; 0.85 → alerte coût</text>
+        <text x="611" y="374" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">EAC &gt; BAC + 10% → escalade</text>
+
+        <line x1="611" y1="291" x2="611" y2="306" stroke="#D85A30" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- PM reçoit alerte -->
+        <rect x="494" y="423" width="234" height="72" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="611" y="446" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">PM reçoit dashboard</text>
+        <text x="611" y="462" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">consultation indicateurs + alertes</text>
+        <text x="611" y="477" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">décision avant rédaction rapport V04</text>
+
+        <line x1="611" y1="396" x2="611" y2="421" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+        <!-- Planning Eng reçoit aussi -->
+        <rect x="14" y="423" width="174" height="72" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="101" y="446" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Eng valide résultats</text>
+        <text x="101" y="462" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">vérification sens des indicateurs</text>
+        <text x="101" y="477" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">annotation écarts si besoin</text>
+
+        <line x1="341" y1="291" x2="341" y2="411" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="341" y1="411" x2="101" y2="411" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="101" y1="411" x2="101" y2="421" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah3)"/>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#EF9F27"></div>Données input</div>
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Calcul moteur EVM</div>
+        <div class="legend-item"><div class="legend-line" style="background:#D85A30"></div>Alerte seuils</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Validation humaine</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V04 — RÉDACTION WEEKLY REPORT                  -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-4">
+      <p class="view-desc">Génération du Weekly Report. PMSimplex compile automatiquement les données EVM, le planning mis à jour et le look-ahead. L'IA génère un draft narratif. Le Planning Engineer révise et finalise avant soumission au PM.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : rédaction manuelle 4h — copy-paste depuis P6 et Excel</span>
+        <span class="gain-chip chip-pms">✓ Draft structuré auto en &lt; 5 min — données injectées depuis moteur</span>
+        <span class="gain-chip chip-pms">✓ IA narrative uniquement — données critiques restent dans moteur déterministe</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <line x1="200" y1="0" x2="200" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="460" y1="0" x2="460" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="720" y1="0" x2="720" y2="560" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="100"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning Engineer</text>
+        <text x="330"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex Engine</text>
+        <text x="330"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">Compilation + IA narrative</text>
+        <text x="590"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Project Manager</text>
+        <text x="890"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Rapport draft / final</text>
+
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="165" x2="1060" y2="165" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="295" x2="1060" y2="295" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="415" x2="1060" y2="415" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <text x="4" y="75"  font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">COMPILE</text>
+        <text x="4" y="180" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">DRAFT IA</text>
+        <text x="4" y="310" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">RÉVISION</text>
+        <text x="4" y="430" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">FINAL</text>
+
+        <!-- Compilation auto engine -->
+        <rect x="212" y="68" width="236" height="88" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="330" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Compilation automatique</text>
+        <text x="330" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">EVM V03 + Planning P6 V02</text>
+        <text x="330" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Blocages + Risques actifs</text>
+        <text x="330" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Look-Ahead S+1/S+2/S+3</text>
+
+        <!-- Draft narrative -->
+        <rect x="212" y="173" width="236" height="108" rx="6" fill="rgba(127,119,221,0.12)" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="330" y="193" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Draft narratif IA</text>
+        <text x="330" y="209" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Résumé exécutif</text>
+        <text x="330" y="224" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Analyse avancement discipline</text>
+        <text x="330" y="239" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Faits marquants + alertes</text>
+        <text x="330" y="254" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Tableau blocages + actions</text>
+        <text x="330" y="269" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">LLM sur narration uniquement</text>
+
+        <line x1="330" y1="156" x2="330" y2="171" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah4)"/>
+
+        <!-- Draft → Eng révision -->
+        <line x1="212" y1="227" x2="148" y2="227" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah4)"/>
+
+        <!-- Revision eng -->
+        <rect x="14" y="173" width="174" height="108" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="101" y="193" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Révision Eng.</text>
+        <text x="101" y="209" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">vérification cohérence</text>
+        <text x="101" y="224" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">correction narration IA si besoin</text>
+        <text x="101" y="239" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">annotation contexte terrain</text>
+        <text x="101" y="254" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">validation données critiques</text>
+        <text x="101" y="269" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">humain valide avant soumission</text>
+
+        <!-- Draft V1 → PM -->
+        <line x1="188" y1="303" x2="470" y2="303" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah4)"/>
+        <line x1="101" y1="281" x2="101" y2="303" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="101" y1="303" x2="186" y2="303" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+
+        <!-- Rapport structure visible (droite) -->
+        <rect x="732" y="68" width="314" height="238" rx="6" fill="rgba(55,138,221,0.08)" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="889" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#85B7EB">Structure rapport PMSimplex</text>
+        <text x="889" y="108" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§1 Résumé exécutif — statut RAG</text>
+        <text x="889" y="123" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§2 Avancement discipline / zone</text>
+        <text x="889" y="138" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§3 Indicateurs EVM — courbe S</text>
+        <text x="889" y="153" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§4 Look-Ahead 3 semaines</text>
+        <text x="889" y="168" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§5 Blocages &amp; actions</text>
+        <text x="889" y="183" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§6 Top 5 risques actifs</text>
+        <text x="889" y="198" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">§7 Annexes — Gantt 6-8 sem.</text>
+        <line x1="732" y1="210" x2="1046" y2="210" stroke="rgba(55,138,221,0.2)" stroke-width="0.5"/>
+        <text x="889" y="228" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Toutes sections générées auto depuis</text>
+        <text x="889" y="243" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">moteur déterministe — narration IA</text>
+        <text x="889" y="258" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">rédigée sur base données vérifiées</text>
+        <text x="889" y="273" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">uniquement après validation Eng.</text>
+        <text x="889" y="293" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Indice A → soumission PM</text>
+
+        <!-- PM review -->
+        <rect x="472" y="303" width="236" height="88" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="590" y="323" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">PM — revue rapport</text>
+        <text x="590" y="339" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">lecture + commentaires</text>
+        <text x="590" y="354" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">demande correction si requis</text>
+        <text x="590" y="369" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">ou validation → étape V05</text>
+
+        <!-- PM → Eng retour si correction -->
+        <line x1="472" y1="347" x2="208" y2="347" stroke="#1D9E75" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah4)"/>
+
+        <!-- Eng finalise V2 -->
+        <rect x="14" y="423" width="174" height="88" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="101" y="443" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Finalisation V2</text>
+        <text x="101" y="459" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">intégration retours PM</text>
+        <text x="101" y="474" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">rapport final V2 généré</text>
+        <text x="101" y="489" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">→ soumis approbation V05</text>
+
+        <line x1="101" y1="391" x2="101" y2="421" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah4)"/>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Moteur PMSimplex + IA narrative</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Validation humaine obligatoire</div>
+        <div class="legend-item"><div class="legend-line" style="background:#378ADD"></div>Structure rapport</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#1D9E75"></div>Retour / correction</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V05 — REVUE & APPROBATION                      -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-5">
+      <p class="view-desc">Circuit d'approbation formel du Weekly Report. PMSimplex gère le workflow de validation avec matrice de délégation, historique des révisions et émission avec indice officiel.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : circuit papier / email — sans traçabilité version</span>
+        <span class="gain-chip chip-pms">✓ Workflow approbation intégré — historique révisions horodaté</span>
+        <span class="gain-chip chip-pms">✓ Indice officiel auto-généré — lien direct vers DMS</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <line x1="220" y1="0" x2="220" y2="500" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="460" y1="0" x2="460" y2="500" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="700" y1="0" x2="700" y2="500" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="860" y1="0" x2="860" y2="500" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="110"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Planning Engineer</text>
+        <text x="340"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Project Manager</text>
+        <text x="580"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex</text>
+        <text x="580"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">Workflow approbation</text>
+        <text x="780"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Deputy PM / Dir.</text>
+        <text x="960"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Document Control</text>
+
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="168" x2="1060" y2="168" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="288" x2="1060" y2="288" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="398" x2="1060" y2="398" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <text x="4" y="75"  font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">SOUMISS.</text>
+        <text x="4" y="183" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">REVUE PM</text>
+        <text x="4" y="303" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">APPRO.</text>
+        <text x="4" y="413" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ÉMISSION</text>
+
+        <!-- Soumission eng -->
+        <rect x="14" y="68" width="194" height="88" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="111" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Soumission rapport V2</text>
+        <text x="111" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">rapport finalisé soumis</text>
+        <text x="111" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">via workflow PMSimplex</text>
+        <text x="111" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">notification automatique PM</text>
+
+        <line x1="208" y1="112" x2="234" y2="112" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <!-- PMSimplex workflow -->
+        <rect x="470" y="68" width="218" height="88" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="579" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Workflow PMSimplex</text>
+        <text x="579" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">statut : En attente approbation</text>
+        <text x="579" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">notif PM + délai max 24h</text>
+        <text x="579" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">historique révisions horodaté</text>
+
+        <line x1="236" y1="112" x2="468" y2="112" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <!-- PM Revue -->
+        <rect x="236" y="176" width="222" height="100" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="347" y="196" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">PM — revue formelle</text>
+        <text x="347" y="212" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">lecture complète du rapport</text>
+        <text x="347" y="227" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">vérification messages clés</text>
+        <text x="347" y="242" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">cohérence avec décisions PMT</text>
+        <text x="347" y="257" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">commentaires dans PMSimplex</text>
+
+        <line x1="579" y1="156" x2="579" y2="178" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="579" y1="178" x2="460" y2="178" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="460" y1="178" x2="460" y2="226" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="460" y1="226" x2="460" y2="226" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <!-- Décision PM - OK ou renvoi -->
+        <rect x="470" y="176" width="218" height="100" rx="6" fill="rgba(29,158,117,0.10)" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="579" y="196" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Décision PM</text>
+        <text x="579" y="216" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#1D9E75">✓ Approbation → émission</text>
+        <text x="579" y="234" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">— ou —</text>
+        <text x="579" y="252" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#D85A30">✗ Renvoi Eng. avec commentaires</text>
+
+        <line x1="347" y1="276" x2="347" y2="290" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <!-- Si escalade Deputy PM -->
+        <rect x="706" y="176" width="142" height="100" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2" stroke-dasharray="5 3"/>
+        <text x="777" y="196" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">Escalade (si requis)</text>
+        <text x="777" y="212" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Deputy PM ou</text>
+        <text x="777" y="227" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Direction si alerte</text>
+        <text x="777" y="242" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">CPI/SPI critique</text>
+        <text x="777" y="257" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">déclenché auto</text>
+
+        <line x1="688" y1="226" x2="706" y2="226" stroke="#EF9F27" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah5)"/>
+
+        <!-- Approbation formelle -->
+        <rect x="236" y="296" width="222" height="92" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="347" y="316" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Approbation formelle</text>
+        <text x="347" y="332" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">signature électronique PM</text>
+        <text x="347" y="347" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">selon matrice délégation</text>
+        <text x="347" y="362" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">indice officiel attribué</text>
+        <text x="347" y="377" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">WR-2026-W24-A</text>
+
+        <!-- Indice → PMSimplex -->
+        <line x1="458" y1="342" x2="468" y2="342" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <!-- PMSimplex génère indice -->
+        <rect x="470" y="296" width="218" height="92" rx="6" fill="rgba(127,119,221,0.12)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="579" y="316" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex — Émission</text>
+        <text x="579" y="332" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">génération PDF officiel</text>
+        <text x="579" y="347" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">transmittal auto-généré</text>
+        <text x="579" y="362" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">notification Doc Control</text>
+        <text x="579" y="377" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">→ V06 Distribution</text>
+
+        <!-- Doc control notification -->
+        <line x1="688" y1="342" x2="874" y2="342" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+        <rect x="876" y="296" width="170" height="92" rx="6" fill="#1E2330" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="961" y="316" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#85B7EB">Doc. Control notifié</text>
+        <text x="961" y="332" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">enregistrement DMS</text>
+        <text x="961" y="347" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">transmittal log mis à jour</text>
+        <text x="961" y="362" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">liste distribution activée</text>
+
+        <!-- Eng reçoit confirmation -->
+        <rect x="14" y="406" width="194" height="72" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="111" y="426" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Confirmation émission</text>
+        <text x="111" y="442" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Eng. reçoit notification</text>
+        <text x="111" y="457" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">rapport publié WR-W24-A</text>
+
+        <line x1="579" y1="388" x2="579" y2="408" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="579" y1="408" x2="208" y2="408" stroke="#7F77DD" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="208" y1="408" x2="208" y2="406" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah5)"/>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Workflow PMSimplex</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Approbation formelle</div>
+        <div class="legend-item"><div class="legend-line" style="background:#378ADD"></div>Émission officielle</div>
+        <div class="legend-item"><div class="legend-line" style="background:#EF9F27"></div>Escalade (conditionnel)</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V06 — DISTRIBUTION & ARCHIVAGE DMS             -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-6">
+      <p class="view-desc">Distribution contractuelle et archivage dans le DMS. PMSimplex exécute la liste de distribution définie au contrat, enregistre les accusés de réception et archive le rapport avec toutes les métadonnées requises.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Traditionnel : envoi manuel email — risque oubli destinataire, sans accusé</span>
+        <span class="gain-chip chip-pms">✓ Distribution auto sur liste contractuelle — accusé de réception tracké</span>
+        <span class="gain-chip chip-pms">✓ Archivage DMS avec métadonnées complètes — retrouvable en 10 sec</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <line x1="200" y1="0" x2="200" y2="480" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="440" y1="0" x2="440" y2="480" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="680" y1="0" x2="680" y2="480" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="860" y1="0" x2="860" y2="480" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="100"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Document Control</text>
+        <text x="320"  y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#AFA9EC">PMSimplex DMS</text>
+        <text x="320"  y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7F77DD">Distribution + Archive</text>
+        <text x="560"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Client / PMC / Owner</text>
+        <text x="770"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Interne PMT</text>
+        <text x="960"  y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="500" fill="#9997AB">Archivage Pérenne</text>
+
+        <line x1="0" y1="60" x2="1060" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="172" x2="1060" y2="172" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="294" x2="1060" y2="294" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="396" x2="1060" y2="396" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+        <text x="4" y="75"  font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ENREG.</text>
+        <text x="4" y="187" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">DISTRIB.</text>
+        <text x="4" y="309" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ACCUSÉ</text>
+        <text x="4" y="411" font-family="IBM Plex Mono" font-size="9" fill="#5E5C70">ARCHIVE</text>
+
+        <!-- Enregistrement DMS -->
+        <rect x="212" y="68" width="216" height="92" rx="6" fill="rgba(127,119,221,0.15)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="320" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Enregistrement DMS</text>
+        <text x="320" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">numéro rapport WR-2026-W24</text>
+        <text x="320" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">indice A · date émission</text>
+        <text x="320" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">période couverte · statut</text>
+        <text x="320" y="149" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">émetteur · approbateur</text>
+
+        <line x1="14" y1="114" x2="210" y2="114" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah6)"/>
+        <rect x="14" y="68" width="174" height="92" rx="6" fill="#1E2330" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="101" y="88" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#85B7EB">Doc. Control</text>
+        <text x="101" y="104" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">vérifie conformité</text>
+        <text x="101" y="119" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">métadonnées rapport</text>
+        <text x="101" y="134" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">avant enregistrement</text>
+
+        <!-- Distribution contractuelle -->
+        <rect x="212" y="180" width="216" height="104" rx="6" fill="rgba(127,119,221,0.12)" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="320" y="200" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Distribution auto</text>
+        <text x="320" y="216" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">liste contractuelle activée</text>
+        <text x="320" y="231" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Client · PMC · Owner's Eng.</text>
+        <text x="320" y="246" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">PMT interne · Dir. si requis</text>
+        <text x="320" y="261" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">transmittal log auto-mis à jour</text>
+        <text x="320" y="276" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">délai contractuel respecté</text>
+
+        <line x1="320" y1="160" x2="320" y2="178" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ah6)"/>
+
+        <!-- Réception Client -->
+        <rect x="450" y="180" width="218" height="104" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="559" y="200" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Réception client</text>
+        <text x="559" y="216" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">accusé de réception</text>
+        <text x="559" y="231" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">commentaires éventuels</text>
+        <text x="559" y="246" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">demandes clarification</text>
+        <text x="559" y="261" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">réponses dans PMSimplex</text>
+
+        <line x1="428" y1="232" x2="448" y2="232" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah6)"/>
+
+        <!-- Réception Interne PMT -->
+        <rect x="692" y="180" width="156" height="104" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="770" y="200" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#AFA9EC">Réception PMT</text>
+        <text x="770" y="216" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">PM · Site Mgr</text>
+        <text x="770" y="231" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Discipline Leads</text>
+        <text x="770" y="246" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Département TNP</text>
+        <text x="770" y="261" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Direction si requis</text>
+
+        <line x1="668" y1="232" x2="690" y2="232" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ah6)"/>
+
+        <!-- Accusés réception -->
+        <rect x="450" y="302" width="218" height="84" rx="6" fill="rgba(29,158,117,0.10)" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="559" y="322" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Accusés trackés PMSimplex</text>
+        <text x="559" y="338" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">date/heure ouverture</text>
+        <text x="559" y="353" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">relance auto si délai dépassé</text>
+        <text x="559" y="368" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">preuve contractuelle intégrée</text>
+
+        <line x1="559" y1="284" x2="559" y2="300" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah6)"/>
+
+        <!-- Archivage pérenne -->
+        <rect x="872" y="180" width="174" height="214" rx="6" fill="rgba(127,119,221,0.08)" stroke="#534AB7" stroke-width="1" stroke-dasharray="5 3"/>
+        <text x="959" y="200" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#7F77DD">Archive pérenne</text>
+        <text x="959" y="220" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">PDF rapport final</text>
+        <text x="959" y="235" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">fichier P6 data date</text>
+        <text x="959" y="250" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">snapshot EVM</text>
+        <text x="959" y="265" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">transmittal log</text>
+        <text x="959" y="280" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">accusés réception</text>
+        <line x1="872" y1="295" x2="1046" y2="295" stroke="rgba(83,74,183,0.3)" stroke-width="0.5"/>
+        <text x="959" y="315" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Base audit</text>
+        <text x="959" y="330" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Base réclamation</text>
+        <text x="959" y="345" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Régul. SONATRACH</text>
+        <text x="959" y="360" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Conformité ENI</text>
+        <text x="959" y="375" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">retrouvabilité &lt;10s</text>
+
+        <line x1="668" y1="240" x2="870" y2="240" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah6)"/>
+        <line x1="428" y1="344" x2="870" y2="344" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ah6)"/>
+
+        <!-- Cycle suivant -->
+        <rect x="14" y="404" width="620" height="52" rx="6" fill="rgba(29,158,117,0.08)" stroke="rgba(29,158,117,0.3)" stroke-width="1"/>
+        <text x="324" y="424" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#1D9E75">✓ Cycle W24 clôturé — Ouverture automatique du cycle W25 dans PMSimplex</text>
+        <text x="324" y="440" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Dimanche suivant 18h00 — notification discipline leads</text>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#378ADD"></div>Distribution officielle</div>
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>DMS PMSimplex</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Accusés et confirmations</div>
+        <div class="legend-item"><div class="legend-dash" style="border-color:#534AB7"></div>Archivage pérenne auto</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <!-- V07 — CADENCE & GAINS PMSIMPLEX                -->
+    <!-- ─────────────────────────────────────────────── -->
+    <div class="swimlane-wrap" id="view-7">
+      <p class="view-desc">Synthèse de la cadence hebdomadaire et quantification des gains par rapport à une approche de gestion de projet traditionnelle. PMSimplex transforme un processus de 3–4 jours en un cycle de 6 heures, avec une traçabilité totale.</p>
+      <div class="gains-bar">
+        <span class="gain-chip chip-trad">⚠ Approche traditionnelle : 3 à 4 jours · équipe 3–4 personnes · risque d'erreur élevé</span>
+        <span class="gain-chip chip-pms">✓ PMSimplex : cycle &lt; 6h · 1 Planning Eng · zéro erreur de calcul · audit-ready</span>
+      </div>
+
+      <svg class="sl-svg" viewBox="0 0 1060 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- Timeline header -->
+        <rect x="0" y="0" width="1060" height="48" fill="#1E2330"/>
+        <text x="530" y="28" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" font-weight="500" fill="#AFA9EC">Cadence hebdomadaire — Dimanche → Mardi 17h00</text>
+
+        <!-- Timeline bar -->
+        <rect x="30" y="65" width="1000" height="6" rx="3" fill="rgba(127,119,221,0.2)"/>
+        <!-- DIM marker -->
+        <circle cx="30"   cy="68" r="5" fill="#534AB7"/>
+        <text x="30"   y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#7F77DD">DIM 18h</text>
+        <!-- LUN 08 -->
+        <circle cx="280"  cy="68" r="5" fill="#534AB7"/>
+        <text x="280"  y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#7F77DD">LUN 08h</text>
+        <!-- LUN 12 -->
+        <circle cx="530"  cy="68" r="5" fill="#534AB7"/>
+        <text x="530"  y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#7F77DD">LUN 12h</text>
+        <!-- LUN 17 -->
+        <circle cx="700"  cy="68" r="5" fill="#534AB7"/>
+        <text x="700"  y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#7F77DD">MAR 08h</text>
+        <!-- MAR 17 -->
+        <circle cx="1030" cy="68" r="5" fill="#1D9E75"/>
+        <text x="1030" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1D9E75">MAR 17h</text>
+
+        <!-- Timeline segments colored -->
+        <rect x="30"  cy="65" x="30"  y="65" width="250" height="6" rx="0" fill="#EF9F27" opacity=".8"/>
+        <rect x="280" cy="65" x="280" y="65" width="250" height="6" rx="0" fill="#7F77DD" opacity=".8"/>
+        <rect x="530" cy="65" x="530" y="65" width="170" height="6" rx="0" fill="#1D9E75" opacity=".8"/>
+        <rect x="700" cy="65" x="700" y="65" width="330" height="6" rx="0" fill="#378ADD" opacity=".8"/>
+
+        <!-- Activity blocks on timeline -->
+        <!-- V01 Collecte -->
+        <rect x="30" y="105" width="250" height="56" rx="6" fill="#1E2330" stroke="#EF9F27" stroke-width="1.2"/>
+        <text x="155" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#EF9F27">V01 — Collecte terrain</text>
+        <text x="155" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Dim 18h → Lun 08h</text>
+        <text x="155" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">Discipline Leads · PMSimplex validation</text>
+
+        <!-- V02 Planning -->
+        <rect x="280" y="105" width="130" height="56" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="345" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" font-weight="500" fill="#AFA9EC">V02 — P6 Update</text>
+        <text x="345" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Lun 08h → 10h</text>
+        <text x="345" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">Engine CPM auto</text>
+
+        <!-- V03 EVM -->
+        <rect x="410" y="105" width="120" height="56" rx="6" fill="#1E2330" stroke="#7F77DD" stroke-width="1.2"/>
+        <text x="470" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" font-weight="500" fill="#AFA9EC">V03 — EVM</text>
+        <text x="470" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Lun 10h → 12h</text>
+        <text x="470" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">Calcul auto &lt;30s</text>
+
+        <!-- V04 Rapport -->
+        <rect x="530" y="105" width="170" height="56" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="615" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" font-weight="500" fill="#5DCAA5">V04 — Rapport draft</text>
+        <text x="615" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Lun 12h → 17h</text>
+        <text x="615" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">Eng. révise + soumet</text>
+
+        <!-- V05 Approbation -->
+        <rect x="700" y="105" width="160" height="56" rx="6" fill="#1E2330" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="780" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" font-weight="500" fill="#5DCAA5">V05 — Approbation</text>
+        <text x="780" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Mar 08h → 12h</text>
+        <text x="780" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">PM signe · indice A</text>
+
+        <!-- V06 Distribution -->
+        <rect x="860" y="105" width="170" height="56" rx="6" fill="#1E2330" stroke="#378ADD" stroke-width="1.2"/>
+        <text x="945" y="127" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" font-weight="500" fill="#85B7EB">V06 — Distribution</text>
+        <text x="945" y="143" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#9997AB">Mar 12h → 17h</text>
+        <text x="945" y="152" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5E5C70">Envoi + archivage DMS</text>
+
+        <!-- ── GAINS COMPARISON TABLE ── -->
+        <text x="30" y="210" font-family="IBM Plex Mono" font-size="10" font-weight="500" fill="#5E5C70" letter-spacing=".06em">COMPARAISON APPROCHE TRADITIONNELLE vs PMSimplex</text>
+        <line x1="30" y1="218" x2="1030" y2="218" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+        <!-- Table header -->
+        <rect x="30" y="225" width="335" height="30" rx="4" fill="rgba(239,159,39,0.1)" />
+        <rect x="370" y="225" width="335" height="30" rx="4" fill="rgba(127,119,221,0.15)"/>
+        <rect x="710" y="225" width="320" height="30" rx="4" fill="rgba(29,158,117,0.08)"/>
+
+        <text x="197" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="500" fill="#EF9F27">APPROCHE TRADITIONNELLE</text>
+        <text x="537" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="500" fill="#AFA9EC">PMSimplex</text>
+        <text x="870" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="500" fill="#5DCAA5">GAIN</text>
+
+        <!-- Rows -->
+        <!-- Row 1 -->
+        <line x1="30" y1="258" x2="1030" y2="258" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="272" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Durée cycle</text>
+        <text x="365" y="272" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">3 à 4 jours ouvrés</text>
+        <text x="703" y="272" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">6 heures (dim soir → mar 17h)</text>
+        <text x="1025" y="272" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">↓ 85%</text>
+
+        <!-- Row 2 -->
+        <line x1="30" y1="282" x2="1030" y2="282" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="297" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Collecte avancement</text>
+        <text x="365" y="297" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">Emails / Excel non structurés</text>
+        <text x="703" y="297" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Formulaires structurés + auto-validation</text>
+        <text x="1025" y="297" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">0 erreur</text>
+
+        <!-- Row 3 -->
+        <line x1="30" y1="307" x2="1030" y2="307" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="322" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Calcul EVM</text>
+        <text x="365" y="322" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">Excel 2–3h, formules fragiles</text>
+        <text x="703" y="322" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Moteur déterministe &lt;30 sec</text>
+        <text x="1025" y="322" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">↓ 99%</text>
+
+        <!-- Row 4 -->
+        <line x1="30" y1="332" x2="1030" y2="332" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="347" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Rédaction rapport</text>
+        <text x="365" y="347" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">3–4h copy-paste manuel</text>
+        <text x="703" y="347" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Draft auto &lt;5 min + révision Eng.</text>
+        <text x="1025" y="347" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">↓ 80%</text>
+
+        <!-- Row 5 -->
+        <line x1="30" y1="357" x2="1030" y2="357" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="372" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Traçabilité</text>
+        <text x="365" y="372" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">Partielle — versions non contrôlées</text>
+        <text x="703" y="372" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Snapshot horodaté immuable par étape</text>
+        <text x="1025" y="372" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">100%</text>
+
+        <!-- Row 6 -->
+        <line x1="30" y1="382" x2="1030" y2="382" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="397" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Auditabilité / réclamation</text>
+        <text x="365" y="397" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">Reconstruction laborieuse</text>
+        <text x="703" y="397" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Historique complet, retrouvable &lt;10s</text>
+        <text x="1025" y="397" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Natif</text>
+
+        <!-- Row 7 -->
+        <line x1="30" y1="407" x2="1030" y2="407" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="422" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Rôle IA</text>
+        <text x="365" y="422" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">Absente ou LLM généraliste non contrôlé</text>
+        <text x="703" y="422" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">Narration uniquement — données dans moteur</text>
+        <text x="1025" y="422" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">Contrôlé</text>
+
+        <!-- Row 8 -->
+        <line x1="30" y1="432" x2="1030" y2="432" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <text x="38" y="447" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Ressource nécessaire</text>
+        <text x="365" y="447" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#F0997B">3–4 personnes · coordination lourde</text>
+        <text x="703" y="447" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#AFA9EC">1 Planning Engineer + PM (validation)</text>
+        <text x="1025" y="447" text-anchor="end" font-family="IBM Plex Sans" font-size="11" font-weight="500" fill="#5DCAA5">↓ 70%</text>
+
+        <!-- Bottom note -->
+        <line x1="30" y1="462" x2="1030" y2="462" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+        <text x="530" y="482" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" fill="#534AB7">PMSimplex — Moteur déterministe EVM/CPM · Zéro LLM sur données critiques · Architecture auditable O&amp;G / EPC</text>
+        <text x="530" y="498" text-anchor="middle" font-family="IBM Plex Sans" font-size="10" fill="#5E5C70">Les calculs EVM, CPM et document management sont exécutés par le moteur déterministe. L'IA intervient uniquement sur la narration, après validation humaine obligatoire.</text>
+      </svg>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#EF9F27"></div>Collecte terrain</div>
+        <div class="legend-item"><div class="legend-line" style="background:#7F77DD"></div>Calcul moteur</div>
+        <div class="legend-item"><div class="legend-line" style="background:#1D9E75"></div>Validation / rédaction</div>
+        <div class="legend-item"><div class="legend-line" style="background:#378ADD"></div>Distribution officielle</div>
+      </div>
+    </div>
+
+  </div><!-- end diagram-container -->
+</main>
+
+<script>
+  const views = [
+    { step: 'V00', title: 'Vue d\'ensemble — Cycle hebdomadaire', deadline: 'Cycle : Dim → Mar' },
+    { step: 'V01', title: 'Collecte des données terrain',         deadline: 'Délai : Dim 23h59' },
+    { step: 'V02', title: 'Mise à jour planning P6',              deadline: 'Délai : Lun 10h00' },
+    { step: 'V03', title: 'Calcul EVM & indicateurs',             deadline: 'Délai : Lun 12h00' },
+    { step: 'V04', title: 'Rédaction Weekly Report',              deadline: 'Délai : Lun 17h00' },
+    { step: 'V05', title: 'Revue & approbation',                  deadline: 'Délai : Mar 12h00' },
+    { step: 'V06', title: 'Distribution & archivage DMS',         deadline: 'Délai : Mar 17h00' },
+    { step: 'V07', title: 'Cadence & gains PMSimplex',            deadline: 'Synthèse globale' },
+  ];
+
+  let current = 0;
+
+  function showView(idx) {
+    if (idx < 0 || idx >= views.length) return;
+
+    document.querySelectorAll('.swimlane-wrap').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+
+    document.getElementById('topbar-step').textContent    = views[idx].step;
+    document.getElementById('topbar-title').textContent   = views[idx].title;
+    document.getElementById('topbar-deadline').textContent = views[idx].deadline;
+
+    current = idx;
+  }
+
+  function nextView() { showView((current + 1) % views.length); }
+  function prevView() { showView((current - 1 + views.length) % views.length); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') nextView();
+    if (e.key === 'ArrowLeft')  prevView();
+  });
+</script>
+</body>
+</html>
