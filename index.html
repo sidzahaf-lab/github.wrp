@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMSimplex — Weekly Reporting Process</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F7;--bg2:#FFFFFF;--bg3:#EEF0F4;--bg4:#E4E6EB;
+  --border:#E0E2E8;--border2:#C8CAD4;
+  --text:#1A1D2E;--text2:#4A4D62;--text3:#9096AB;
+  --purple:#4C45B8;--purple-l:#7B74D4;--purple-d:#332E99;--purple-bg:#EDEAFC;--purple-light:#F5F4FE;
+  --teal:#0A7B5C;--teal-l:#12A67C;--teal-bg:#E5F7F1;--teal-light:#F0FBF7;
+  --amber:#B56A00;--amber-bg:#FEF3DC;--amber-light:#FFFBF0;
+  --coral:#B83320;--coral-bg:#FCEAE7;--coral-light:#FFF5F4;
+  --blue:#1A5FAB;--blue-bg:#E6F0FA;--blue-light:#F0F7FF;
+  --slate:#3A4060;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 12px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06);
+  --radius:6px;--radius-md:8px;--radius-lg:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:13px}
+
+/* ─── SIDEBAR ─────────────────────────────────────────── */
+.sidebar{width:256px;min-width:256px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;box-shadow:var(--shadow-sm)}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-name{font-size:16px;font-weight:700;color:var(--purple-d);letter-spacing:-.02em}
+.logo-tagline{font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-top:3px;font-family:'IBM Plex Mono',monospace}
+.sidebar-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:18px 20px 8px;font-family:'IBM Plex Mono',monospace}
+.nav-item{display:flex;align-items:flex-start;gap:10px;padding:9px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--purple-light)}
+.nav-item.active{background:var(--purple-bg);border-left-color:var(--purple)}
+.nav-num{font-size:9px;font-weight:600;color:var(--purple);font-family:'IBM Plex Mono',monospace;padding-top:2px;min-width:24px;letter-spacing:.04em}
+.nav-label{font-size:12px;color:var(--text2);line-height:1.4}
+.nav-item.active .nav-label{color:var(--purple-d);font-weight:500}
+.nav-item.active .nav-num{color:var(--purple-d)}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);line-height:1.7;font-family:'IBM Plex Mono',monospace}
+
+/* ─── MAIN ────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-sm)}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-step{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--purple);background:var(--purple-bg);border:1.5px solid rgba(76,69,184,0.2);padding:3px 12px;border-radius:20px;letter-spacing:.05em}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-deadline{font-size:11px;color:var(--amber);background:var(--amber-bg);border:1.5px solid rgba(181,106,0,.2);padding:3px 11px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.nav-arrows{display:flex;gap:6px}
+.arrow-btn{width:30px;height:30px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.arrow-btn:hover{background:var(--purple-bg);color:var(--purple);border-color:rgba(76,69,184,.3)}
+
+/* ─── CONTENT CONTAINER ──────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
+
+/* ─── VIEW PANELS ─────────────────────────────────────── */
+.view-panel{display:none;flex-direction:column;min-height:100%}
+.view-panel.active{display:flex}
+
+/* ─── VIEW HEADER STRIP ──────────────────────────────── */
+.view-header{padding:24px 32px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.view-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.view-title-block{}
+.view-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:4px}
+.view-desc{font-size:13px;color:var(--text2);line-height:1.7;max-width:700px}
+.view-meta{display:flex;gap:8px;flex-wrap:wrap}
+.meta-chip{font-size:11px;font-weight:500;padding:4px 11px;border-radius:20px;font-family:'IBM Plex Mono',monospace;border:1.5px solid transparent}
+.chip-warn{background:var(--coral-bg);color:var(--coral);border-color:rgba(184,51,32,.18)}
+.chip-good{background:var(--teal-bg);color:var(--teal);border-color:rgba(10,123,92,.18)}
+.chip-info{background:var(--blue-bg);color:var(--blue);border-color:rgba(26,95,171,.18)}
+.chip-purple{background:var(--purple-bg);color:var(--purple);border-color:rgba(76,69,184,.18)}
+
+/* ─── VIEW BODY ───────────────────────────────────────── */
+.view-body{flex:1;padding:24px 32px 32px;display:flex;flex-direction:column;gap:24px}
+
+/* ─── SWIMLANE ────────────────────────────────────────── */
+.swimlane-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.section-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg3)}
+.section-header-icon{width:28px;height:28px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.section-header-title{font-size:12px;font-weight:600;color:var(--text);letter-spacing:.01em;text-transform:uppercase}
+.section-header-sub{font-size:11px;color:var(--text3);margin-left:auto;font-family:'IBM Plex Mono',monospace}
+.swimlane-svg-wrap{padding:20px;overflow-x:auto}
+.swimlane-svg-wrap svg{min-width:860px;width:100%}
+
+/* ─── LEGEND ──────────────────────────────────────────── */
+.legend-bar{display:flex;gap:20px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg3)}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);font-weight:500}
+.leg-line{width:22px;height:3px;border-radius:2px;flex-shrink:0}
+.leg-dash{width:22px;height:0;border-top:2.5px dashed;flex-shrink:0}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ─── DOCUMENT TEMPLATES GRID ─────────────────────────── */
+.templates-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.templates-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0}
+.tpl-card{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0;cursor:pointer;transition:background .15s;display:flex;flex-direction:column}
+.tpl-card:hover .tpl-card-body{background:var(--bg3)}
+.tpl-card-header{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.tpl-card-icon{width:32px;height:32px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;font-style:normal}
+.tpl-card-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
+.tpl-card-subtitle{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.tpl-tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;margin-left:auto;flex-shrink:0}
+.tag-input{background:#FEF3DC;color:#B56A00;border:1px solid rgba(181,106,0,.2)}
+.tag-output{background:#E5F7F1;color:#0A7B5C;border:1px solid rgba(10,123,92,.2)}
+.tag-engine{background:#EDEAFC;color:#4C45B8;border:1px solid rgba(76,69,184,.2)}
+.tpl-card-body{padding:14px 18px 16px;flex:1;transition:background .15s}
+.tpl-preview{font-size:11px;line-height:1.6;color:var(--text2)}
+.tpl-preview table{width:100%;border-collapse:collapse;margin-top:8px;font-size:10px}
+.tpl-preview th{background:var(--bg4);padding:4px 8px;text-align:left;font-weight:600;color:var(--text);border:1px solid var(--border);font-size:10px}
+.tpl-preview td{padding:4px 8px;border:1px solid var(--border);color:var(--text2);vertical-align:top}
+.tpl-preview td.good{color:var(--teal);font-weight:500}
+.tpl-preview td.warn{color:var(--coral);font-weight:500}
+.tpl-preview td.amber{color:var(--amber);font-weight:500}
+.tpl-preview td.num{font-family:'IBM Plex Mono',monospace;font-size:10px}
+.tpl-preview .mini-bar-wrap{height:6px;background:var(--bg4);border-radius:3px;margin-top:2px;overflow:hidden}
+.tpl-preview .mini-bar{height:6px;border-radius:3px}
+.cell-pill{display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:8px}
+.pill-g{background:#DCFCE7;color:#166534}
+.pill-a{background:#FEF9C3;color:#713F12}
+.pill-r{background:#FEE2E2;color:#991B1B}
+
+/* ─── KPI CARDS ───────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:2px 0 0 2px}
+.kpi-card.good::before{background:var(--teal)}
+.kpi-card.warn::before{background:var(--amber)}
+.kpi-card.bad::before{background:var(--coral)}
+.kpi-card.info::before{background:var(--blue)}
+.kpi-card.purple::before{background:var(--purple)}
+.kpi-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.kpi-value{font-size:22px;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;letter-spacing:-.02em;line-height:1}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:4px}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:6px}
+.kpi-delta.up{color:var(--teal)}
+.kpi-delta.down{color:var(--coral)}
+
+/* ─── PROCESS STEPS INLINE ───────────────────────────── */
+.process-steps{display:flex;flex-direction:column;gap:0}
+.process-step{display:flex;gap:16px;padding:16px 20px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .15s}
+.process-step:last-child{border-bottom:none}
+.process-step:hover{background:var(--bg3)}
+.ps-num{width:28px;height:28px;border-radius:50%;background:var(--purple-bg);border:1.5px solid rgba(76,69,184,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono',monospace}
+.ps-body{flex:1}
+.ps-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.ps-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.ps-gain{font-size:11px;color:var(--teal);font-weight:500;margin-top:5px;display:flex;align-items:center;gap:5px}
+.ps-gain::before{content:'✓';font-weight:700}
+.ps-warn{font-size:11px;color:var(--amber);font-weight:500;margin-top:5px;display:flex;align-items:center;gap:5px}
+.ps-warn::before{content:'⚠'}
+.ps-meta{margin-left:auto;flex-shrink:0;text-align:right}
+.ps-owner{font-size:10px;font-weight:600;color:var(--purple);background:var(--purple-bg);padding:3px 8px;border-radius:10px;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.ps-time{font-size:10px;color:var(--text3);margin-top:4px;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+
+/* ─── IO FLOW ROW ─────────────────────────────────────── */
+.io-flow{display:flex;align-items:stretch;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.io-col{flex:1;padding:16px 18px}
+.io-col.inputs{background:var(--amber-light);border-right:1px solid var(--border)}
+.io-col.engine{background:var(--purple-light);border-right:1px solid var(--border);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.io-col.outputs{background:var(--teal-light)}
+.io-col-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-family:'IBM Plex Mono',monospace}
+.io-col.inputs .io-col-title{color:var(--amber)}
+.io-col.engine .io-col-title{color:var(--purple)}
+.io-col.outputs .io-col-title{color:var(--teal)}
+.io-item{display:flex;align-items:flex-start;gap:7px;margin-bottom:6px;font-size:12px;color:var(--text2)}
+.io-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.engine-badge{background:var(--purple);color:#fff;font-size:10px;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.engine-note{font-size:10px;color:var(--purple-l);line-height:1.5;max-width:140px}
+
+/* ─── COMPARISON TABLE ────────────────────────────────── */
+.compare-table{width:100%;border-collapse:collapse;font-size:12px}
+.compare-table th{padding:10px 14px;text-align:left;font-weight:600;font-size:11px;letter-spacing:.03em}
+.compare-table th:first-child{color:var(--text3);background:var(--bg3)}
+.compare-table th.col-trad{background:var(--coral-light);color:var(--coral);text-align:center}
+.compare-table th.col-pms{background:var(--purple-bg);color:var(--purple);text-align:center}
+.compare-table th.col-gain{background:var(--teal-bg);color:var(--teal);text-align:center}
+.compare-table td{padding:9px 14px;border-top:1px solid var(--border);color:var(--text2);vertical-align:middle}
+.compare-table td:first-child{font-weight:500;color:var(--text);background:var(--bg3)}
+.compare-table td.trad{color:var(--coral);text-align:center}
+.compare-table td.pms{color:var(--purple-d);text-align:center;font-weight:500}
+.compare-table td.gain{color:var(--teal);text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.compare-table tr:hover td{background:rgba(76,69,184,.03)}
+.compare-table tr:hover td:first-child{background:var(--bg4)}
+
+/* ─── TIMELINE BAR ────────────────────────────────────── */
+.timeline-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;box-shadow:var(--shadow-sm)}
+.timeline-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;font-family:'IBM Plex Mono',monospace}
+.timeline-track{position:relative;height:52px;margin-bottom:8px}
+.tl-bar{position:absolute;height:14px;top:0;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace;overflow:hidden;white-space:nowrap;padding:0 6px}
+.tl-label{position:absolute;top:20px;font-size:9px;font-weight:500;color:var(--text3);transform:translateX(-50%);white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+.tl-marker{position:absolute;top:-4px;width:1px;background:var(--border2);height:20px}
+.tl-steps-row{display:flex;gap:6px;margin-top:8px}
+.tl-step{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:10px}
+.tl-step-code{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:9px;color:var(--purple);margin-bottom:2px}
+.tl-step-name{font-weight:500;color:var(--text);line-height:1.3}
+.tl-step-time{color:var(--text3);margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:9px}
+
+/* ─── DASHBOARD PREVIEW ───────────────────────────────── */
+.dashboard-preview{background:#F8F9FC;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;font-size:11px}
+.dash-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;font-family:'IBM Plex Mono',monospace}
+.dash-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.dash-kpi{flex:1;min-width:80px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;text-align:center}
+.dash-kpi-label{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;letter-spacing:.05em}
+.dash-kpi-val{font-size:18px;font-weight:700;margin:2px 0;font-family:'IBM Plex Mono',monospace;letter-spacing:-.02em}
+.dash-kpi-sub{font-size:9px;color:var(--text3)}
+.val-good{color:var(--teal)}
+.val-bad{color:var(--coral)}
+.val-warn{color:var(--amber)}
+.val-purple{color:var(--purple)}
+.scurve-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-top:8px}
+.scurve-title{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+<!-- ══════ SIDEBAR ═══════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-name">PMSimplex</div>
+    <div class="logo-tagline">Project Controls OS · O&amp;G / EPC</div>
+  </div>
+  <div class="sidebar-section">Process Views</div>
+  <div class="nav-item active" onclick="showView(0)"><span class="nav-num">V00</span><span class="nav-label">Introduction &amp; overview</span></div>
+  <div class="nav-item" onclick="showView(1)"><span class="nav-num">V01</span><span class="nav-label">Field data collection</span></div>
+  <div class="nav-item" onclick="showView(2)"><span class="nav-num">V02</span><span class="nav-label">P6 schedule update</span></div>
+  <div class="nav-item" onclick="showView(3)"><span class="nav-num">V03</span><span class="nav-label">EVM calculation &amp; KPIs</span></div>
+  <div class="nav-item" onclick="showView(4)"><span class="nav-num">V04</span><span class="nav-label">Weekly report drafting</span></div>
+  <div class="nav-item" onclick="showView(5)"><span class="nav-num">V05</span><span class="nav-label">Review &amp; approval</span></div>
+  <div class="nav-item" onclick="showView(6)"><span class="nav-num">V06</span><span class="nav-label">Distribution &amp; DMS archive</span></div>
+  <div class="nav-item" onclick="showView(7)"><span class="nav-num">V07</span><span class="nav-label">Cadence &amp; gains summary</span></div>
+  <div class="sidebar-footer">Deterministic EVM/CPM engine<br>Zero LLM on critical data<br>Full audit trail · O&amp;G / EPC ready<br>© PMSimplex 2026</div>
+</aside>
+
+<!-- ══════ MAIN ════════════════════════════════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-step" id="topbar-step">V00</span>
+      <span class="topbar-title" id="topbar-title">Introduction &amp; Process Overview</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-deadline" id="topbar-deadline">Full cycle: Sun 18h → Tue 17h</span>
+      <div class="nav-arrows">
+        <button class="arrow-btn" onclick="prevView()" title="Previous">&#8592;</button>
+        <button class="arrow-btn" onclick="nextView()" title="Next">&#8594;</button>
+      </div>
+    </div>
+  </div>
+  <div class="content" id="content">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V00 — INTRODUCTION & OVERVIEW                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel active" id="view-0">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">Why Weekly Reporting Fails — and How PMSimplex Fixes It</div>
+        <div class="view-desc">In O&amp;G and EPC environments, the weekly progress report is the project's single source of truth. Yet in most organisations it takes 3–4 days, involves 3–4 people, and still produces data that is inconsistent, hard to audit, and late. PMSimplex replaces the fragmented manual cycle with a structured, deterministic 6-hour process — leaving your team's judgment where it belongs: on field decisions, not spreadsheet maintenance.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: 3–4 days, fragile Excel, no audit trail</span>
+      <span class="meta-chip chip-good">✓ PMSimplex: 6h cycle, deterministic engine, full traceability</span>
+      <span class="meta-chip chip-purple">8 views — use ← → keys or sidebar to navigate</span>
+    </div>
+  </div>
+  <div class="view-body">
+
+    <!-- Timeline overview -->
+    <div class="timeline-wrap">
+      <div class="timeline-title">Weekly cycle at a glance — Sun 18:00 → Tue 17:00</div>
+      <div class="timeline-track">
+        <div class="tl-bar" style="left:0%;width:23%;background:#B56A00">V01 COLLECT</div>
+        <div class="tl-bar" style="left:23%;width:12%;background:#4C45B8">V02 P6</div>
+        <div class="tl-bar" style="left:35%;width:11%;background:#4C45B8">V03 EVM</div>
+        <div class="tl-bar" style="left:46%;width:17%;background:#0A7B5C">V04 DRAFT</div>
+        <div class="tl-bar" style="left:63%;width:16%;background:#0A7B5C">V05 APPROVE</div>
+        <div class="tl-bar" style="left:79%;width:21%;background:#1A5FAB">V06 PUBLISH</div>
+        <div class="tl-label" style="left:0%">SUN 18h</div>
+        <div class="tl-label" style="left:23%">MON 08h</div>
+        <div class="tl-label" style="left:46%">MON 12h</div>
+        <div class="tl-label" style="left:63%">MON 17h</div>
+        <div class="tl-label" style="left:79%">TUE 08h</div>
+        <div class="tl-label" style="left:100%">TUE 17h</div>
+      </div>
+      <div class="tl-steps-row">
+        <div class="tl-step"><div class="tl-step-code">V01</div><div class="tl-step-name">Field collection</div><div class="tl-step-time">Sun 18h→Mon 08h</div></div>
+        <div class="tl-step"><div class="tl-step-code">V02</div><div class="tl-step-name">P6 update</div><div class="tl-step-time">Mon 08h→10h</div></div>
+        <div class="tl-step"><div class="tl-step-code">V03</div><div class="tl-step-name">EVM calc.</div><div class="tl-step-time">Mon 10h→12h</div></div>
+        <div class="tl-step"><div class="tl-step-code">V04</div><div class="tl-step-name">Report draft</div><div class="tl-step-time">Mon 12h→17h</div></div>
+        <div class="tl-step"><div class="tl-step-code">V05</div><div class="tl-step-name">PM approval</div><div class="tl-step-time">Tue 08h→12h</div></div>
+        <div class="tl-step"><div class="tl-step-code">V06</div><div class="tl-step-name">Distribution</div><div class="tl-step-time">Tue 12h→17h</div></div>
+      </div>
+    </div>
+
+    <!-- KPI summary -->
+    <div class="kpi-row">
+      <div class="kpi-card good"><div class="kpi-label">Cycle reduction</div><div class="kpi-value">↓ 85%</div><div class="kpi-sub">3–4 days → 6 hours</div></div>
+      <div class="kpi-card good"><div class="kpi-label">Calculation errors</div><div class="kpi-value">Zero</div><div class="kpi-sub">Deterministic EVM engine</div></div>
+      <div class="kpi-card purple"><div class="kpi-label">EVM methods</div><div class="kpi-value">6</div><div class="kpi-sub">Locked to baseline per activity</div></div>
+      <div class="kpi-card info"><div class="kpi-label">Headcount</div><div class="kpi-value">↓ 70%</div><div class="kpi-sub">1 Engineer + PM (approval only)</div></div>
+      <div class="kpi-card good"><div class="kpi-label">Audit readiness</div><div class="kpi-value">100%</div><div class="kpi-sub">Timestamped immutable snapshots</div></div>
+      <div class="kpi-card purple"><div class="kpi-label">AI role</div><div class="kpi-value">Narrative</div><div class="kpi-sub">Data stays in deterministic engine</div></div>
+    </div>
+
+    <!-- Swimlane overview -->
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#EDEAFC">📊</div>
+        <div class="section-header-title">Full process swimlane — all actors &amp; flows</div>
+        <div class="section-header-sub">Sun → Tue · 6 actors</div>
+      </div>
+      <div class="swimlane-svg-wrap">
+        <svg viewBox="0 0 980 540" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="a0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+          </defs>
+          <!-- header -->
+          <rect x="0" y="0" width="980" height="44" fill="#EEF0F4"/>
+          <line x1="140" y1="0" x2="140" y2="540" stroke="#E0E2E8" stroke-width="1"/>
+          <line x1="285" y1="0" x2="285" y2="540" stroke="#E0E2E8" stroke-width="1"/>
+          <line x1="430" y1="0" x2="430" y2="540" stroke="#E0E2E8" stroke-width="1"/>
+          <line x1="575" y1="0" x2="575" y2="540" stroke="#E0E2E8" stroke-width="1"/>
+          <line x1="720" y1="0" x2="720" y2="540" stroke="#E0E2E8" stroke-width="1"/>
+          <!-- actor labels -->
+          <text x="70" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4A4D62">Disc. Leads</text>
+          <text x="70" y="31" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="#9096AB">Civil·Mech·Elec·Inst</text>
+          <text x="212" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4A4D62">Planning Eng.</text>
+          <text x="357" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4C45B8">PMSimplex Engine</text>
+          <text x="357" y="31" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="#7B74D4">Deterministic · Auditable</text>
+          <text x="502" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4A4D62">Project Manager</text>
+          <text x="647" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4A4D62">Doc. Control</text>
+          <text x="850" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#4A4D62">Client / PMC</text>
+          <!-- day bands -->
+          <rect x="0" y="44" width="980" height="2" fill="#E0E2E8"/>
+          <text x="4" y="62" font-family="IBM Plex Mono" font-size="8" fill="#9096AB" font-weight="600">SUN</text>
+          <text x="4" y="157" font-family="IBM Plex Mono" font-size="8" fill="#9096AB" font-weight="600">MON</text>
+          <text x="4" y="267" font-family="IBM Plex Mono" font-size="8" fill="#9096AB" font-weight="600">TUE</text>
+          <line x1="0" y1="55" x2="980" y2="55" stroke="#EEF0F4" stroke-width="1"/>
+          <line x1="0" y1="148" x2="980" y2="148" stroke="#EEF0F4" stroke-width="1"/>
+          <line x1="0" y1="258" x2="980" y2="258" stroke="#EEF0F4" stroke-width="1"/>
+          <line x1="0" y1="368" x2="980" y2="368" stroke="#EEF0F4" stroke-width="1"/>
+          <line x1="0" y1="458" x2="980" y2="458" stroke="#EEF0F4" stroke-width="1"/>
+          <!-- Step boxes -->
+          <!-- 1 Field entry -->
+          <rect x="8" y="62" width="122" height="54" rx="5" fill="#FEF3DC" stroke="#B56A00" stroke-width="1.3"/>
+          <text x="69" y="82" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#B56A00">1. Field Entry</text>
+          <text x="69" y="96" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">% progress / blockers</text>
+          <text x="69" y="108" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">per WBS activity</text>
+          <!-- 2 Upload XER -->
+          <rect x="148" y="62" width="128" height="54" rx="5" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1.3"/>
+          <text x="212" y="82" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">2. Upload XER</text>
+          <text x="212" y="96" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">P6 file + actual dates</text>
+          <text x="212" y="108" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">data date advanced</text>
+          <!-- 3 Engine CPM -->
+          <rect x="293" y="62" width="128" height="54" rx="5" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.8"/>
+          <text x="357" y="82" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">3. CPM Recalc.</text>
+          <text x="357" y="96" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">Total Float · Crit. Path</text>
+          <text x="357" y="108" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">forecast dates updated</text>
+          <!-- arrows row 1 -->
+          <line x1="130" y1="89" x2="146" y2="89" stroke="#B56A00" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="276" y1="89" x2="291" y2="89" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <!-- 4 Variance review -->
+          <rect x="148" y="158" width="128" height="54" rx="5" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1.3"/>
+          <text x="212" y="178" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">4. Float Analysis</text>
+          <text x="212" y="192" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">drift vs baseline</text>
+          <text x="212" y="206" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">critical path shifts</text>
+          <!-- 5 EVM calc -->
+          <rect x="293" y="158" width="128" height="54" rx="5" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.8"/>
+          <text x="357" y="178" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">5. EVM Calc.</text>
+          <text x="357" y="192" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">SPI·CPI·EAC·SPI(t)</text>
+          <text x="357" y="206" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">6 methods · auto alerts</text>
+          <!-- 6 AI Draft -->
+          <rect x="293" y="228" width="128" height="54" rx="5" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.8"/>
+          <text x="357" y="248" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">6. AI Draft</text>
+          <text x="357" y="262" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">narrative on verified data</text>
+          <text x="357" y="276" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">LLM narration only</text>
+          <!-- PM validation -->
+          <rect x="438" y="228" width="128" height="54" rx="5" fill="#E5F7F1" stroke="#0A7B5C" stroke-width="1.3"/>
+          <text x="502" y="248" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#0A7B5C">7. PM Review</text>
+          <text x="502" y="262" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">verify + correct draft</text>
+          <text x="502" y="276" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">comments logged</text>
+          <!-- 8 Final V2 -->
+          <rect x="148" y="298" width="128" height="54" rx="5" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1.3"/>
+          <text x="212" y="318" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4C45B8">8. Finalise V2</text>
+          <text x="212" y="332" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">incorporate PM feedback</text>
+          <text x="212" y="346" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">last human checkpoint</text>
+          <!-- 9 Approval -->
+          <rect x="438" y="298" width="128" height="54" rx="5" fill="#E5F7F1" stroke="#0A7B5C" stroke-width="1.5"/>
+          <text x="502" y="318" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#0A7B5C">9. Formal Approval</text>
+          <text x="502" y="332" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">e-signature PM · Rev A</text>
+          <text x="502" y="346" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">WR-2026-W24-A</text>
+          <!-- 10 DMS -->
+          <rect x="583" y="298" width="128" height="54" rx="5" fill="#E6F0FA" stroke="#1A5FAB" stroke-width="1.3"/>
+          <text x="647" y="318" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#1A5FAB">10. DMS Register</text>
+          <text x="647" y="332" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">index + transmittal log</text>
+          <text x="647" y="346" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">metadata recorded</text>
+          <!-- 11 Transmit -->
+          <rect x="583" y="378" width="128" height="54" rx="5" fill="#E6F0FA" stroke="#1A5FAB" stroke-width="1.3"/>
+          <text x="647" y="398" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#1A5FAB">11. Transmittal</text>
+          <text x="647" y="412" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">contract distrib. list</text>
+          <text x="647" y="426" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">auto-send + ack tracking</text>
+          <!-- 12 Client -->
+          <rect x="728" y="378" width="128" height="54" rx="5" fill="#E5F7F1" stroke="#0A7B5C" stroke-width="1.3"/>
+          <text x="792" y="398" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#0A7B5C">12. Client Receipt</text>
+          <text x="792" y="412" text-anchor="middle" font-family="Inter" font-size="9" fill="#4A4D62">acknowledgement</text>
+          <text x="792" y="426" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">contractual proof</text>
+          <!-- 13 Snapshot -->
+          <rect x="293" y="468" width="128" height="48" rx="5" fill="#F5F4FE" stroke="#7B74D4" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="357" y="489" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#7B74D4">13. P6 Snapshot</text>
+          <text x="357" y="503" text-anchor="middle" font-family="Inter" font-size="9" fill="#9096AB">immutable · data date locked</text>
+          <!-- flow arrows -->
+          <line x1="357" y1="116" x2="357" y2="156" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="357" y1="212" x2="357" y2="226" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="421" y1="255" x2="436" y2="255" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="357" y1="116" x2="357" y2="140" stroke="#4C45B8" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="357" y1="140" x2="212" y2="140" stroke="#4C45B8" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="212" y1="140" x2="212" y2="156" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="502" y1="282" x2="502" y2="286" stroke="#0A7B5C" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="502" y1="286" x2="212" y2="286" stroke="#0A7B5C" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="212" y1="286" x2="212" y2="296" stroke="#0A7B5C" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="276" y1="325" x2="436" y2="325" stroke="#4C45B8" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="566" y1="325" x2="581" y2="325" stroke="#0A7B5C" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="647" y1="352" x2="647" y2="376" stroke="#1A5FAB" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="711" y1="405" x2="726" y2="405" stroke="#1A5FAB" stroke-width="1.5" marker-end="url(#a0)"/>
+          <line x1="357" y1="282" x2="357" y2="466" stroke="#7B74D4" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#a0)"/>
+        </svg>
+      </div>
+      <div class="legend-bar">
+        <div class="legend-item"><div class="leg-line" style="background:#B56A00"></div>Field data</div>
+        <div class="legend-item"><div class="leg-line" style="background:#4C45B8"></div>PMSimplex engine</div>
+        <div class="legend-item"><div class="leg-line" style="background:#0A7B5C"></div>Human validation</div>
+        <div class="legend-item"><div class="leg-line" style="background:#1A5FAB"></div>Official publication</div>
+        <div class="legend-item"><div class="leg-dash" style="border-color:#7B74D4"></div>Auto snapshot / archive</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V01 — FIELD DATA COLLECTION                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-1">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V01 — Field Data Collection</div>
+        <div class="view-desc">Every Weekly Report stands or falls on the quality of what comes in from the field. PMSimplex replaces the chronic problem of scattered emails and unstructured Excel files with discipline-specific structured forms, automatic consistency cross-checks, and a timestamped immutable snapshot. The Planning Engineer supervises — not aggregates.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: 4–6h manual consolidation, version conflicts</span>
+      <span class="meta-chip chip-good">✓ PMSimplex: structured forms, auto-validation, &lt;15 min consolidation</span>
+      <span class="meta-chip chip-good">✓ Measurement method locked to baseline — no arbitrary declaration</span>
+    </div>
+  </div>
+  <div class="view-body">
+
+    <!-- IO flow -->
+    <div class="io-flow">
+      <div class="io-col inputs">
+        <div class="io-col-title">📥 Inputs</div>
+        <div class="io-item"><span class="io-icon">📋</span><span>Flash reports — daily field summaries per zone/discipline</span></div>
+        <div class="io-item"><span class="io-icon">🕐</span><span>Timesheets — actual hours per activity (MOE/MON)</span></div>
+        <div class="io-item"><span class="io-icon">📊</span><span>Discipline leads — % progress per WBS activity</span></div>
+        <div class="io-item"><span class="io-icon">🚧</span><span>Blocker register — blocked activities with root cause</span></div>
+        <div class="io-item"><span class="io-icon">📐</span><span>Physical quantity reports — units completed per activity</span></div>
+      </div>
+      <div class="io-col engine">
+        <div class="io-col-title">⚙ PMSimplex Engine</div>
+        <div class="engine-badge">DETERMINISTIC</div>
+        <div class="engine-note">Auto-validates AC vs EV. Locks measurement method per baseline. Generates immutable snapshot at period close.</div>
+      </div>
+      <div class="io-col outputs">
+        <div class="io-col-title">📤 Outputs</div>
+        <div class="io-item"><span class="io-icon">✅</span><span>Consolidated progress dataset — clean, validated, timestamped</span></div>
+        <div class="io-item"><span class="io-icon">🔒</span><span>Immutable snapshot — audit-ready, retrievable in &lt;10 sec</span></div>
+        <div class="io-item"><span class="io-icon">⚠️</span><span>Inconsistency flags — CPI &lt;0.7 or &gt;1.3 auto-notified to lead</span></div>
+        <div class="io-item"><span class="io-icon">📨</span><span>Completion rate report — sent to Planning Eng for oversight</span></div>
+        <div class="io-item"><span class="io-icon">➡️</span><span>Ready for V02 P6 update — no manual re-entry</span></div>
+      </div>
+    </div>
+
+    <!-- Process steps -->
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#FEF3DC">📥</div>
+        <div class="section-header-title">Detailed process steps — V01</div>
+        <div class="section-header-sub">Window: Sun 18:00 → Mon 08:00</div>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="ps-num">1</div>
+          <div class="ps-body">
+            <div class="ps-title">Cycle trigger — automated notification</div>
+            <div class="ps-desc">PMSimplex automatically opens the collection window every Sunday at 18:00. Each discipline lead receives a personalised notification with a direct link to their structured input form. No email drafting by the Planning Engineer. No list to remember.</div>
+            <div class="ps-gain">Replaces 30–45 min of manual email preparation and follow-up</div>
+          </div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Sun 18:00 auto</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">2</div>
+          <div class="ps-body">
+            <div class="ps-title">Structured progress entry by discipline leads</div>
+            <div class="ps-desc">Each lead enters: % physical progress per WBS activity (method locked at baseline), activity status (in progress / completed / blocked), and mandatory variance justification if actual progress is more than 5% below plan. The measurement method — weighted milestones, % complete, 50/50, 0/100, completed units, or level of effort — cannot be changed after baseline lock.</div>
+            <div class="ps-gain">Eliminates arbitrary self-reporting — every % is method-anchored</div>
+          </div>
+          <div class="ps-meta"><div class="ps-owner">Disc. Leads</div><div class="ps-time">Sun 18h → 23h</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">3</div>
+          <div class="ps-body">
+            <div class="ps-title">Automatic AC vs EV consistency cross-check</div>
+            <div class="ps-desc">PMSimplex compares declared EV (earned value from % progress × BAC) against actual hours consumed (AC from timesheets). If the implied CPI is below 0.7 or above 1.3, the activity is flagged and the discipline lead is notified immediately for correction or written justification. This prevents the most common source of false reporting in EPC environments.</div>
+            <div class="ps-gain">Catches over-optimistic reporting before it reaches the PM — not after the client meeting</div>
+            <div class="ps-warn">Traditional approach: inconsistency only discovered during EVM calculation — 48h later</div>
+          </div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Real-time</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">4</div>
+          <div class="ps-body">
+            <div class="ps-title">Planning Engineer — collection oversight dashboard</div>
+            <div class="ps-desc">The Planning Engineer monitors a real-time completion dashboard showing which disciplines have submitted, which are pending, and which have open alerts. Escalation of late submissions is automated. No manual tracking spreadsheet required.</div>
+            <div class="ps-gain">Supervision time reduced from 2h of chasing to 20 min of review</div>
+          </div>
+          <div class="ps-meta"><div class="ps-owner">Planning Eng.</div><div class="ps-time">Sun→Mon 08h</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">5</div>
+          <div class="ps-body">
+            <div class="ps-title">Period close — immutable snapshot generated</div>
+            <div class="ps-desc">At Mon 00:00, PMSimplex locks the collection window and generates a cryptographically timestamped snapshot of all submitted data. Every data point carries: submitter identity, submission timestamp, and validation status. This snapshot is permanently archived and constitutes the evidentiary base for any future audit, dispute, or contract claim.</div>
+            <div class="ps-gain">Full audit trail from field declaration to published report — every number is traceable</div>
+          </div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Mon 00:00</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Excel template preview -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E5F7F1">📊</div>
+        <div class="section-header-title">Document template — Field Progress Entry Form (Excel input)</div>
+        <div class="section-header-sub">Structured input · replaces free-format emails</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview">
+          <div style="font-size:11px;font-weight:600;color:#4A4D62;margin-bottom:10px;">Weekly Progress Submission — Civil Discipline · Week 24 · Project: SRW-14</div>
+          <table>
+            <thead><tr><th>WBS Code</th><th>Activity Description</th><th>Baseline %</th><th>Actual %</th><th>Status</th><th>Meas. Method</th><th>Variance Reason</th><th>AC Hours</th></tr></thead>
+            <tbody>
+              <tr><td class="num">1.2.1.01</td><td>Earthworks Zone A</td><td class="num">100%</td><td class="num good">100%</td><td><span class="cell-pill pill-g">DONE</span></td><td>0/100</td><td>—</td><td class="num">1,240</td></tr>
+              <tr><td class="num">1.2.1.02</td><td>Concrete foundations F-01→F-08</td><td class="num">80%</td><td class="num amber">72%</td><td><span class="cell-pill pill-a">IN PROG</span></td><td>Weighted milestones</td><td>Rebar delivery delayed 3 days</td><td class="num">3,410</td></tr>
+              <tr><td class="num">1.2.1.03</td><td>Structural steel erection</td><td class="num">45%</td><td class="num good">48%</td><td><span class="cell-pill pill-g">IN PROG</span></td><td>Units completed</td><td>—</td><td class="num">2,180</td></tr>
+              <tr><td class="num">1.2.1.04</td><td>Underground piping trench</td><td class="num">30%</td><td class="num warn">18%</td><td><span class="cell-pill pill-r">BLOCKED</span></td><td>% complete</td><td>Soil contamination — ENV team required</td><td class="num">620</td></tr>
+              <tr><td class="num">1.2.1.05</td><td>Backfill and compaction</td><td class="num">10%</td><td class="num">10%</td><td><span class="cell-pill pill-g">ON PLAN</span></td><td>% complete</td><td>—</td><td class="num">340</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;padding:8px 10px;background:#FEF3DC;border-left:3px solid #B56A00;border-radius:4px;font-size:11px;color:#B56A00;font-weight:500">⚠ PMSimplex alert: Activity 1.2.1.04 — declared progress 18% vs plan 30% (variance -40%). Mandatory justification required before submission lock. CPI implied: 0.61 — below threshold 0.70.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V02 — P6 SCHEDULE UPDATE                               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-2">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V02 — P6 Schedule Update</div>
+        <div class="view-desc">The P6 update is where schedule reality meets plan. Done manually, it is error-prone and time-consuming — constraint violations go undetected, data dates are mishandled, and the look-ahead is rarely generated properly. PMSimplex imports the validated V01 data directly, advances the data date, recalculates CPM, checks all constraints, and generates the 3-week look-ahead automatically.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: 2–3h manual P6 entry — silent constraint errors</span>
+      <span class="meta-chip chip-good">✓ Structured XER import from V01 snapshot — constraint check automatic</span>
+      <span class="meta-chip chip-good">✓ Before/after snapshot — critical path drift visible in seconds</span>
+    </div>
+  </div>
+  <div class="view-body">
+    <div class="io-flow">
+      <div class="io-col inputs">
+        <div class="io-col-title">📥 Inputs</div>
+        <div class="io-item"><span class="io-icon">🗂</span><span>V01 validated progress snapshot</span></div>
+        <div class="io-item"><span class="io-icon">📁</span><span>Current XER file (P6 export)</span></div>
+        <div class="io-item"><span class="io-icon">📅</span><span>Actual Start / Actual Finish per activity</span></div>
+        <div class="io-item"><span class="io-icon">📌</span><span>Approved baseline — constraint register</span></div>
+      </div>
+      <div class="io-col engine">
+        <div class="io-col-title">⚙ PMSimplex Engine</div>
+        <div class="engine-badge">CPM · FLOAT · LOOKAHEAD</div>
+        <div class="engine-note">Recalculates forward/backward pass. Flags hard constraints blocking successors. Generates look-ahead W+1/W+2/W+3.</div>
+      </div>
+      <div class="io-col outputs">
+        <div class="io-col-title">📤 Outputs</div>
+        <div class="io-item"><span class="io-icon">📆</span><span>Updated schedule — new forecast completion dates</span></div>
+        <div class="io-item"><span class="io-icon">⚡</span><span>Critical path report — shifts vs baseline</span></div>
+        <div class="io-item"><span class="io-icon">📋</span><span>3-week look-ahead — resources + prerequisites</span></div>
+        <div class="io-item"><span class="io-icon">🔒</span><span>P6 snapshot — archived with data date</span></div>
+        <div class="io-item"><span class="io-icon">➡️</span><span>Ready for V03 EVM calculation</span></div>
+      </div>
+    </div>
+
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#EDEAFC">📅</div>
+        <div class="section-header-title">Process steps — V02</div>
+        <div class="section-header-sub">Window: Mon 08:00 → 10:00</div>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="ps-num">1</div>
+          <div class="ps-body"><div class="ps-title">Freeze previous version — before any update</div><div class="ps-desc">PMSimplex saves the N-1 schedule as an immutable snapshot before any modification. This baseline comparison is essential for detecting critical path shifts and for claims substantiation.</div><div class="ps-gain">Automatic — no manual backup step required</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Mon 08:00</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">2</div>
+          <div class="ps-body"><div class="ps-title">XER import + progress injection</div><div class="ps-desc">The validated V01 dataset is injected directly into the P6 structure: Actual Start, Actual Finish, and % complete per activity. The data date is advanced to the reporting cutoff. No manual re-entry. No copy-paste from Excel to P6.</div><div class="ps-gain">Eliminates the most common source of P6 update errors — manual data transcription</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Auto</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">3</div>
+          <div class="ps-body"><div class="ps-title">CPM recalculation — forward and backward pass</div><div class="ps-desc">Full CPM recalculation: new early start / late start / early finish / late finish for all activities. Total Float and Free Float updated. Activities with negative Total Float are immediately highlighted as new critical path entrants. Milestone forecast dates compared against approved baseline.</div><div class="ps-warn">Traditional: engineers often miss negative float entrants on first visual review of Gantt</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">&lt;30 sec</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">4</div>
+          <div class="ps-body"><div class="ps-title">Constraint verification — hard constraints flagged</div><div class="ps-desc">PMSimplex scans all schedule constraints: SNET, FNLT, MFO, MSO. Any hard constraint that is actively blocking a successor and creating artificial float suppression is flagged for the Planning Engineer's review. This prevents the silent distortion of float values that regularly misleads PM decisions.</div><div class="ps-gain">Constraint violations identified automatically — no manual schedule audit required</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Auto</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">5</div>
+          <div class="ps-body"><div class="ps-title">3-week look-ahead generation</div><div class="ps-desc">W+1, W+2, W+3 activities extracted with planned resources, predecessors, and outstanding prerequisites (material deliveries, permits, interface clearances). Sent to discipline leads for pre-week readiness check. Missing prerequisites trigger automatic action items in the blockers register.</div><div class="ps-gain">Look-ahead generated in seconds — manually this takes 1–2h per week</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Auto</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Word doc template: schedule update memo -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E6F0FA">📄</div>
+        <div class="section-header-title">Document template — Schedule Update Memo (Word output, auto-generated)</div>
+        <div class="section-header-sub">Output of V02 · Input to V04 report §3 and §4</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview" style="background:#fff;border:1px solid #E0E2E8;border-radius:6px;padding:18px 22px;font-family:Georgia,serif;line-height:1.7">
+          <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #4C45B8">
+            <div style="font-size:13px;font-weight:700;color:#1A1D2E">SCHEDULE STATUS MEMO — WEEK 24 / 2026</div>
+            <div style="font-size:11px;color:#4A4D62;margin-top:2px">Project SRW-14 · Data Date: 15 June 2026 · Issued by: PMSimplex Planning Autopilot</div>
+          </div>
+          <div style="font-size:11px;color:#1A1D2E;margin-bottom:10px"><strong>Critical Path Status:</strong> The critical path runs through Mechanical Package MP-04 (compressor skid erection) and Instrumentation loops IL-07 through IL-12. Current Total Float on critical activities: <span style="color:#B83320;font-weight:600">-3 working days</span>. Forecast mechanical completion: <span style="color:#B83320;font-weight:600">+6 days vs approved baseline</span>.</div>
+          <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px">
+            <thead><tr style="background:#EEF0F4"><th style="padding:5px 8px;border:1px solid #E0E2E8;text-align:left">Milestone</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Baseline Finish</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Forecast Finish</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Delta</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Float</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">Civil Completion</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">30 Jun 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">04 Jul 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320;font-weight:600">+4d</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;font-family:monospace">2d</td></tr>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">Mechanical Completion</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">15 Jul 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">21 Jul 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320;font-weight:600">+6d</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320;font-family:monospace">-3d</td></tr>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">Ready for Commissioning</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">01 Aug 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">10 Aug 2026</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320;font-weight:600">+9d</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;font-family:monospace">0d</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:10px;color:#9096AB;font-style:italic">Auto-generated by PMSimplex Planning Autopilot · V02 output · Mon 10:02 · Snapshot ID: SRW14-W24-SCH-002</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V03 — EVM CALCULATION & KPIs                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-3">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V03 — EVM Calculation &amp; KPIs</div>
+        <div class="view-desc">Earned Value Management is the contract-proven method for measuring project health. Yet in most EPC projects it is either done wrong (simple % complete against budget, not physical progress) or done late (after the report is already drafted). PMSimplex calculates the full EVM suite — including SPI(t) from Earned Schedule theory — automatically, in under 30 seconds, from the V01/V02 validated dataset. No Excel. No formulas to break.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: EVM on Excel 2–3h, fragile formulas, wrong method</span>
+      <span class="meta-chip chip-good">✓ Deterministic engine &lt;30 sec · 6 physical measurement methods</span>
+      <span class="meta-chip chip-good">✓ SPI(t) Earned Schedule — reliable in late-stage projects where SPI converges to 1</span>
+    </div>
+  </div>
+  <div class="view-body">
+
+    <!-- Dashboard preview -->
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#EDEAFC">📊</div>
+        <div class="section-header-title">PMSimplex EVM Dashboard — Live output (W24 · SRW-14)</div>
+        <div class="section-header-sub">Auto-generated · visible to PM + Eng. simultaneously</div>
+      </div>
+      <div style="padding:20px">
+        <div class="dash-row">
+          <div class="dash-kpi"><div class="dash-kpi-label">SPI</div><div class="dash-kpi-val val-warn">0.91</div><div class="dash-kpi-sub">Schedule perf. index</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">CPI</div><div class="dash-kpi-val val-bad">0.84</div><div class="dash-kpi-sub">Cost perf. index</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">SPI(t)</div><div class="dash-kpi-val val-warn">0.88</div><div class="dash-kpi-sub">Earned Schedule</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">EV</div><div class="dash-kpi-val val-purple">$4.2M</div><div class="dash-kpi-sub">Earned value</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">PV</div><div class="dash-kpi-val val-purple">$4.6M</div><div class="dash-kpi-sub">Planned value</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">AC</div><div class="dash-kpi-val val-bad">$5.0M</div><div class="dash-kpi-sub">Actual cost</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">SV</div><div class="dash-kpi-val val-bad">-$0.4M</div><div class="dash-kpi-sub">Schedule variance</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">CV</div><div class="dash-kpi-val val-bad">-$0.8M</div><div class="dash-kpi-sub">Cost variance</div></div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-kpi"><div class="dash-kpi-label">BAC</div><div class="dash-kpi-val val-purple">$12.0M</div><div class="dash-kpi-sub">Budget at completion</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">EAC</div><div class="dash-kpi-val val-bad">$14.3M</div><div class="dash-kpi-sub">Est. at completion</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">VAC</div><div class="dash-kpi-val val-bad">-$2.3M</div><div class="dash-kpi-sub">Variance at completion</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">TCPI</div><div class="dash-kpi-val val-bad">1.29</div><div class="dash-kpi-sub">To-complete perf. index</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">% Complete</div><div class="dash-kpi-val val-warn">35%</div><div class="dash-kpi-sub">Physical progress</div></div>
+          <div class="dash-kpi"><div class="dash-kpi-label">% Spent</div><div class="dash-kpi-val val-bad">42%</div><div class="dash-kpi-sub">Budget consumed</div></div>
+        </div>
+        <!-- S-Curve SVG -->
+        <div class="scurve-wrap">
+          <div class="scurve-title">S-Curve — Baseline · Earned Value · Actual Cost · Forecast</div>
+          <svg viewBox="0 0 820 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;margin-top:4px">
+            <defs><marker id="sc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+            <!-- grid -->
+            <line x1="50" y1="10" x2="50" y2="135" stroke="#E0E2E8" stroke-width="0.5"/>
+            <line x1="50" y1="135" x2="800" y2="135" stroke="#E0E2E8" stroke-width="0.5"/>
+            <line x1="50" y1="110" x2="800" y2="110" stroke="#EEF0F4" stroke-width="0.5"/>
+            <line x1="50" y1="85" x2="800" y2="85" stroke="#EEF0F4" stroke-width="0.5"/>
+            <line x1="50" y1="60" x2="800" y2="60" stroke="#EEF0F4" stroke-width="0.5"/>
+            <line x1="50" y1="35" x2="800" y2="35" stroke="#EEF0F4" stroke-width="0.5"/>
+            <!-- Y labels -->
+            <text x="45" y="138" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">0%</text>
+            <text x="45" y="113" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">25%</text>
+            <text x="45" y="88" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">50%</text>
+            <text x="45" y="63" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">75%</text>
+            <text x="45" y="38" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">100%</text>
+            <!-- X labels -->
+            <text x="50" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W01</text>
+            <text x="175" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W05</text>
+            <text x="300" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W10</text>
+            <text x="425" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W15</text>
+            <text x="550" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W20</text>
+            <text x="610" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W24▲</text>
+            <text x="800" y="148" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9096AB">W40</text>
+            <!-- Baseline (PV) - dark blue -->
+            <polyline points="50,135 100,132 175,125 250,114 300,103 350,88 400,72 450,57 500,42 550,30 610,18 800,10" fill="none" stroke="#1A5FAB" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <!-- EV - purple -->
+            <polyline points="50,135 100,133 175,127 250,118 300,110 350,96 400,83 450,70 500,57 550,50 610,55" fill="none" stroke="#4C45B8" stroke-width="2"/>
+            <!-- AC - red -->
+            <polyline points="50,135 100,133 175,126 250,117 300,108 350,92 400,78 450,64 500,50 550,42 610,40" fill="none" stroke="#B83320" stroke-width="2"/>
+            <!-- Forecast (dashed purple) -->
+            <polyline points="610,55 680,38 750,22 800,10" fill="none" stroke="#4C45B8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#sc)"/>
+            <!-- Data date line -->
+            <line x1="610" y1="10" x2="610" y2="135" stroke="#B56A00" stroke-width="1" stroke-dasharray="3 2"/>
+            <text x="614" y="22" font-family="IBM Plex Mono" font-size="7.5" fill="#B56A00">Data Date</text>
+            <!-- Legend -->
+            <line x1="55" y1="155" x2="75" y2="155" stroke="#1A5FAB" stroke-width="1.5" stroke-dasharray="5 3"/><text x="78" y="158" font-family="Inter" font-size="8" fill="#4A4D62">Baseline (PV)</text>
+            <line x1="155" y1="155" x2="175" y2="155" stroke="#4C45B8" stroke-width="2"/><text x="178" y="158" font-family="Inter" font-size="8" fill="#4A4D62">Earned Value (EV)</text>
+            <line x1="265" y1="155" x2="285" y2="155" stroke="#B83320" stroke-width="2"/><text x="288" y="158" font-family="Inter" font-size="8" fill="#4A4D62">Actual Cost (AC)</text>
+            <line x1="365" y1="155" x2="385" y2="155" stroke="#4C45B8" stroke-width="1.5" stroke-dasharray="5 3"/><text x="388" y="158" font-family="Inter" font-size="8" fill="#4A4D62">Forecast (EAC)</text>
+          </svg>
+        </div>
+        <!-- Alert strip -->
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px;padding:10px 12px;background:#FCEAE7;border-left:3px solid #B83320;border-radius:5px;font-size:11px"><strong style="color:#B83320">⚠ Cost alert: CPI = 0.84</strong><br><span style="color:#4A4D62">Below threshold 0.85. EAC exceeds BAC by $2.3M. TCPI = 1.29 — requires significant efficiency improvement to recover. PM escalation triggered.</span></div>
+          <div style="flex:1;min-width:220px;padding:10px 12px;background:#FEF3DC;border-left:3px solid #B56A00;border-radius:5px;font-size:11px"><strong style="color:#B56A00">⚠ Schedule alert: SPI(t) = 0.88</strong><br><span style="color:#4A4D62">Earned Schedule method confirms 3.2 weeks behind schedule. Conventional SPI (0.91) understates the delay — SPI(t) is the reliable indicator at this project phase.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Excel EVM template -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E5F7F1">📊</div>
+        <div class="section-header-title">Document template — EVM Summary Table (Excel output, auto-generated)</div>
+        <div class="section-header-sub">Output of V03 · Injected directly into §3 of Weekly Report</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview">
+          <table>
+            <thead><tr><th>Discipline / WBS</th><th>BAC ($k)</th><th>PV ($k)</th><th>EV ($k)</th><th>AC ($k)</th><th>SPI</th><th>CPI</th><th>SV ($k)</th><th>CV ($k)</th><th>EAC ($k)</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>CIVIL</strong></td><td class="num">3,200</td><td class="num">1,480</td><td class="num">1,390</td><td class="num">1,520</td><td class="num amber">0.94</td><td class="num warn">0.91</td><td class="num warn">-90</td><td class="num warn">-130</td><td class="num warn">3,516</td><td><span class="cell-pill pill-a">AMBER</span></td></tr>
+              <tr><td><strong>MECHANICAL</strong></td><td class="num">4,800</td><td class="num">1,920</td><td class="num">1,680</td><td class="num">2,100</td><td class="num warn">0.88</td><td class="num warn">0.80</td><td class="num warn">-240</td><td class="num warn">-420</td><td class="num warn">6,000</td><td><span class="cell-pill pill-r">RED</span></td></tr>
+              <tr><td><strong>ELECTRICAL</strong></td><td class="num">2,100</td><td class="num">630</td><td class="num good">660</td><td class="num">620</td><td class="num good">1.05</td><td class="num good">1.06</td><td class="num good">+30</td><td class="num good">+40</td><td class="num good">1,981</td><td><span class="cell-pill pill-g">GREEN</span></td></tr>
+              <tr><td><strong>INSTRUMENTATION</strong></td><td class="num">1,900</td><td class="num">570</td><td class="num">490</td><td class="num warn">560</td><td class="num warn">0.86</td><td class="num warn">0.88</td><td class="num warn">-80</td><td class="num warn">-70</td><td class="num warn">2,159</td><td><span class="cell-pill pill-a">AMBER</span></td></tr>
+              <tr style="background:#F5F4FE"><td><strong>TOTAL PROJECT</strong></td><td class="num"><strong>12,000</strong></td><td class="num"><strong>4,600</strong></td><td class="num"><strong>4,220</strong></td><td class="num"><strong>4,800</strong></td><td class="num amber"><strong>0.91</strong></td><td class="num warn"><strong>0.84</strong></td><td class="num warn"><strong>-380</strong></td><td class="num warn"><strong>-580</strong></td><td class="num warn"><strong>14,286</strong></td><td><span class="cell-pill pill-r">RED</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;font-size:10px;color:#9096AB;font-style:italic">Auto-generated by PMSimplex EVM Engine · V03 output · Mon 11:58 · Snapshot ID: SRW14-W24-EVM-003 · 6-method physical measurement</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V04 — WEEKLY REPORT DRAFTING                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-4">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V04 — Weekly Report Drafting</div>
+        <div class="view-desc">The Weekly Report is not just a document — it is a contractual deliverable, an early warning instrument, and the project team's communication interface with the client. PMSimplex compiles all sections automatically from the V01–V03 validated dataset. The AI generates the narrative draft on verified, structured data only. The Planning Engineer's role shifts from data aggregator to editorial reviewer — a far more valuable use of their time and judgment.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: 3–4h copy-paste from P6 and Excel, inconsistent sections</span>
+      <span class="meta-chip chip-good">✓ Full report compiled in &lt;5 min — AI narrative on verified data only</span>
+      <span class="meta-chip chip-good">✓ All 7 sections auto-populated — Eng. reviews, not rebuilds</span>
+    </div>
+  </div>
+  <div class="view-body">
+    <div class="io-flow">
+      <div class="io-col inputs">
+        <div class="io-col-title">📥 Inputs</div>
+        <div class="io-item"><span class="io-icon">✅</span><span>V01 snapshot — validated field data</span></div>
+        <div class="io-item"><span class="io-icon">📅</span><span>V02 output — updated schedule + look-ahead</span></div>
+        <div class="io-item"><span class="io-icon">📊</span><span>V03 output — full EVM dataset + S-Curve</span></div>
+        <div class="io-item"><span class="io-icon">🚧</span><span>Blockers register — open items + RCA</span></div>
+        <div class="io-item"><span class="io-icon">⚠️</span><span>Risk register — top 5 active risks</span></div>
+      </div>
+      <div class="io-col engine">
+        <div class="io-col-title">⚙ PMSimplex + AI</div>
+        <div class="engine-badge">COMPILE + NARRATE</div>
+        <div class="engine-note">Deterministic engine assembles all structured data. LLM generates narrative section only — on verified inputs. Human validation mandatory.</div>
+      </div>
+      <div class="io-col outputs">
+        <div class="io-col-title">📤 Outputs</div>
+        <div class="io-item"><span class="io-icon">📄</span><span>Draft V1 report — all 7 sections populated</span></div>
+        <div class="io-item"><span class="io-icon">📊</span><span>Embedded S-Curve + KPI table</span></div>
+        <div class="io-item"><span class="io-icon">📋</span><span>3-week look-ahead table</span></div>
+        <div class="io-item"><span class="io-icon">🚧</span><span>Blockers + open actions table</span></div>
+        <div class="io-item"><span class="io-icon">➡️</span><span>Submitted to PM for review — V05</span></div>
+      </div>
+    </div>
+
+    <!-- Word report preview -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E6F0FA">📄</div>
+        <div class="section-header-title">Document template — Weekly Progress Report (Word output, 7-section structure)</div>
+        <div class="section-header-sub">Auto-generated draft · Eng. reviews · PM approves · Client receives</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview" style="background:#fff;border:1px solid #E0E2E8;border-radius:6px;padding:22px 26px;font-family:Georgia,serif;line-height:1.75">
+          <!-- Header -->
+          <div style="border-bottom:3px solid #4C45B8;margin-bottom:16px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end">
+            <div><div style="font-size:15px;font-weight:700;color:#1A1D2E">WEEKLY PROGRESS REPORT — WEEK 24 / 2026</div><div style="font-size:11px;color:#4A4D62;margin-top:3px">Project SRW-14 · South Redevelopment Well — Phase 14 · TriBasin Energy Corp.</div><div style="font-size:11px;color:#4A4D62">Contractor: [EPC Contractor] · Document No: SRW14-WR-2026-W24-A · Date: 16 Jun 2026</div></div>
+            <div style="text-align:right"><div style="font-size:22px;font-weight:700;color:#B83320">● RED</div><div style="font-size:10px;color:#9096AB">Project Status</div></div>
+          </div>
+          <!-- §1 Executive Summary -->
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:#4C45B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">§1 — Executive Summary</div>
+            <div style="font-size:11px;color:#1A1D2E">Week 24 confirms a dual-front challenge on SRW-14: a cost overrun now tracking $2.3M above budget (CPI 0.84) and a schedule delay of 3 working days on the critical mechanical path. The primary driver on cost is the compressor skid erection package (MP-04), where a subcontractor productivity shortfall has generated 840 excess man-hours against the earned value baseline. On schedule, the 6-day forecast slip to mechanical completion is largely attributable to the soil contamination discovery in Zone D (trench 1.2.1.04) which is now pending ENV team clearance. Recovery options are under assessment by the PMT; a revised mitigation plan will be presented at the W25 PMT review meeting.</div>
+          </div>
+          <!-- §2 Progress by discipline -->
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:#4C45B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">§2 — Physical Progress by Discipline</div>
+            <table style="width:100%;border-collapse:collapse;font-size:10px">
+              <thead><tr style="background:#EEF0F4"><th style="padding:5px 8px;border:1px solid #E0E2E8;text-align:left">Discipline</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Plan W24</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Actual W24</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Plan Cum.</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Actual Cum.</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Δ Cum.</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Status</th></tr></thead>
+              <tbody>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8"><strong>Civil</strong></td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">3.2%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">2.8%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">46.2%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">43.4%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">-2.8%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">AMBER</span></td></tr>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8"><strong>Mechanical</strong></td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">4.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">3.1%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">40.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">35.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">-5.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-r">RED</span></td></tr>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8"><strong>Electrical</strong></td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">2.1%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#0A7B5C">2.4%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">30.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#0A7B5C">31.4%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#0A7B5C">+1.4%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-g">GREEN</span></td></tr>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8"><strong>Instrumentation</strong></td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">3.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">2.6%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">30.0%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">25.8%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">-4.2%</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">AMBER</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- §5 Blockers -->
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#4C45B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">§5 — Blockers &amp; Open Actions</div>
+            <table style="width:100%;border-collapse:collapse;font-size:10px">
+              <thead><tr style="background:#EEF0F4"><th style="padding:5px 8px;border:1px solid #E0E2E8;text-align:left">Blocker</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Owner</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Due</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Schedule impact</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Status</th></tr></thead>
+              <tbody>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">Zone D soil contamination — ENV clearance pending</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">ENV Mgr</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">20 Jun</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B83320">+5 days</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-r">OPEN</span></td></tr>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">Rebar delivery batch 3 — supplier delay confirmed</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">Procurement</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">18 Jun</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center;color:#B56A00">+3 days</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">MITIG.</span></td></tr>
+                <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">IL-09 loop test — HSE permit not yet issued</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">HSE Lead</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">17 Jun</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">TBD</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">OPEN</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:10px;color:#9096AB;font-style:italic;margin-top:8px">Draft generated by PMSimplex Planning Autopilot (Agent 5 — AI narrative) · Mon 12:04 · Awaiting Planning Engineer review and PM approval before issuance.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V05 — REVIEW & APPROVAL                                -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-5">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V05 — Review &amp; Approval</div>
+        <div class="view-desc">The approval circuit transforms a draft document into a binding contractual deliverable. In traditional setups, this step is chaotic — comments arrive by email, versions multiply, and the approval trail is non-existent when a client dispute arises 18 months later. PMSimplex implements a structured digital workflow: the PM reviews in a single interface, comments are logged, corrections are tracked, and the final approval generates an official revision index with a full audit trail.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: email circuit, no version control, no approval trail</span>
+      <span class="meta-chip chip-good">✓ Integrated approval workflow — timestamped revision history</span>
+      <span class="meta-chip chip-good">✓ Auto-generated revision index — direct link to DMS registration</span>
+    </div>
+  </div>
+  <div class="view-body">
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E5F7F1">✅</div>
+        <div class="section-header-title">Approval workflow — detailed steps</div>
+        <div class="section-header-sub">Window: Tue 08:00 → 12:00</div>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="ps-num">1</div>
+          <div class="ps-body"><div class="ps-title">V2 report submitted for PM review</div><div class="ps-desc">Planning Engineer submits the finalised V2 report via PMSimplex. The PM receives an automatic notification with a direct review link. Status transitions to "Pending Approval". A 24-hour internal SLA is tracked by the system.</div><div class="ps-gain">No email attachment needed — PM reviews directly in PMSimplex with live data links</div></div>
+          <div class="ps-meta"><div class="ps-owner">Planning Eng.</div><div class="ps-time">Tue 08:00</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">2</div>
+          <div class="ps-body"><div class="ps-title">PM formal review — full read-through</div><div class="ps-desc">The PM reviews all 7 sections within PMSimplex: executive summary messages, discipline progress accuracy, EVM indicator consistency, blocker escalation level, and look-ahead readiness. Comments are entered directly against specific sections. If corrections are required, the report is returned to the Planning Engineer with annotated feedback — not an email thread.</div><div class="ps-warn">Critical: PM must verify that narrative statements are consistent with quantitative data — AI draft may need adjustment</div></div>
+          <div class="ps-meta"><div class="ps-owner">PM</div><div class="ps-time">Tue 08:00→10:00</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">3</div>
+          <div class="ps-body"><div class="ps-title">Conditional escalation — Deputy PM or Director</div><div class="ps-desc">If PMSimplex detects that the current report carries a CPI below 0.80, or an EAC overrun exceeding 15% of BAC, an automatic escalation notification is sent to the Deputy PM or Project Director per the project's delegation matrix. This ensures senior leadership is not kept waiting for a cascaded email — they receive the same information, simultaneously.</div><div class="ps-gain">Senior management informed proactively — not reactively at the next steering committee</div></div>
+          <div class="ps-meta"><div class="ps-owner">Auto-trigger</div><div class="ps-time">If threshold</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">4</div>
+          <div class="ps-body"><div class="ps-title">Formal approval — electronic signature + revision index</div><div class="ps-desc">PM approves the report electronically within PMSimplex. The system automatically assigns the official revision index (e.g. WR-2026-W24-A), generates the final PDF, creates the transmittal record, and notifies Document Control. The entire approval chain — submitter, reviewer, approver, timestamp — is recorded in the immutable audit log.</div><div class="ps-gain">Approval generates a legal-grade audit record — essential for EPC contract environments</div></div>
+          <div class="ps-meta"><div class="ps-owner">PM</div><div class="ps-time">Tue 10:00→12:00</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transmittal template -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E6F0FA">📨</div>
+        <div class="section-header-title">Document template — Transmittal Record (auto-generated on approval)</div>
+        <div class="section-header-sub">Output of V05 · Input to V06 distribution</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview" style="background:#fff;border:1px solid #E0E2E8;border-radius:6px;padding:18px 22px;font-family:Georgia,serif;line-height:1.6">
+          <div style="border-bottom:2px solid #1A5FAB;margin-bottom:14px;padding-bottom:10px">
+            <div style="font-size:13px;font-weight:700;color:#1A1D2E">DOCUMENT TRANSMITTAL</div>
+            <div style="font-size:10px;color:#4A4D62;margin-top:2px">Transmittal No: SRW14-TBE-2026-0247 · Auto-generated by PMSimplex · 16 Jun 2026 14:22</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px">
+            <tr><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4;width:160px">Project</td><td style="padding:4px 8px;border:1px solid #E0E2E8">SRW-14 — South Redevelopment Well Phase 14</td><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4;width:140px">Client</td><td style="padding:4px 8px;border:1px solid #E0E2E8">TriBasin Energy Corp.</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4">Document No.</td><td style="padding:4px 8px;border:1px solid #E0E2E8;font-family:monospace;color:#4C45B8">SRW14-WR-2026-W24-A</td><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4">Issue Date</td><td style="padding:4px 8px;border:1px solid #E0E2E8">16 June 2026</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4">Title</td><td style="padding:4px 8px;border:1px solid #E0E2E8" colspan="3">Weekly Progress Report — Week 24 / 2026</td></tr>
+            <tr><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4">Revision</td><td style="padding:4px 8px;border:1px solid #E0E2E8">A (First issue)</td><td style="padding:4px 8px;border:1px solid #E0E2E8;font-weight:600;background:#EEF0F4">Approved by</td><td style="padding:4px 8px;border:1px solid #E0E2E8">[PM Name] — 16 Jun 2026 14:18</td></tr>
+          </table>
+          <table style="width:100%;border-collapse:collapse;font-size:10px">
+            <thead><tr style="background:#EEF0F4"><th style="padding:5px 8px;border:1px solid #E0E2E8;text-align:left">Addressee</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Organisation</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Role</th><th style="padding:5px 8px;border:1px solid #E0E2E8">For</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Ack. Required</th><th style="padding:5px 8px;border:1px solid #E0E2E8">Status</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">[Client PM]</td><td style="padding:4px 8px;border:1px solid #E0E2E8">TriBasin Energy Corp.</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Owner</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Information / Review</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">Yes</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">PENDING</span></td></tr>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">[PMC Lead]</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Owner's Engineer</td><td style="padding:4px 8px;border:1px solid #E0E2E8">PMC</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Information</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">Yes</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-a">PENDING</span></td></tr>
+              <tr><td style="padding:4px 8px;border:1px solid #E0E2E8">[Project Director]</td><td style="padding:4px 8px;border:1px solid #E0E2E8">EPC Contractor</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Internal</td><td style="padding:4px 8px;border:1px solid #E0E2E8">Information</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center">No</td><td style="padding:4px 8px;border:1px solid #E0E2E8;text-align:center"><span class="cell-pill pill-g">SENT</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;font-size:10px;color:#9096AB;font-style:italic">Transmittal auto-generated by PMSimplex DMS module · Snapshot ID: SRW14-W24-TBE-0247 · Acknowledgement tracking active</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V06 — DISTRIBUTION & DMS ARCHIVING                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-6">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V06 — Distribution &amp; DMS Archiving</div>
+        <div class="view-desc">Distribution is not just sending an email. In an EPC contract environment it is a regulated act: the wrong list, a missed addressee, or a lost delivery confirmation can have legal and financial consequences. PMSimplex executes the contractual distribution list automatically, tracks acknowledgements, and archives the complete document package — report, transmittal, P6 snapshot, EVM snapshot — in a single immutable record. The cycle then closes automatically and W25 opens.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: manual email, risk of missed addressee, no delivery proof</span>
+      <span class="meta-chip chip-good">✓ Auto-distribution on contractual list — acknowledgements tracked</span>
+      <span class="meta-chip chip-good">✓ Full document package archived — retrievable in &lt;10 sec</span>
+    </div>
+  </div>
+  <div class="view-body">
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#E6F0FA">📨</div>
+        <div class="section-header-title">Distribution &amp; archive steps</div>
+        <div class="section-header-sub">Window: Tue 12:00 → 17:00</div>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="ps-num">1</div>
+          <div class="ps-body"><div class="ps-title">DMS registration with full metadata</div><div class="ps-desc">PMSimplex registers the approved report in the DMS with all required metadata: document number, revision index, period covered, issue date, originator, approver, and contractual category. The registration is automatic on PM approval — Document Control validates metadata before the distribution lock is released.</div><div class="ps-gain">Registration time: under 2 minutes vs 30–45 min manual indexing</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex + DC</div><div class="ps-time">Tue 12:00</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">2</div>
+          <div class="ps-body"><div class="ps-title">Automatic distribution — contractual list</div><div class="ps-desc">The contractual distribution list (defined in the project's Document Management Plan) is executed automatically: Client PM, Owner's Engineer, internal PMT, Project Director, and any other addressees specified in the contract. Each recipient receives a secure link to the document in PMSimplex — not an email attachment that can be lost, corrupted, or forwarded to unintended recipients.</div><div class="ps-gain">Zero risk of missed addressee — list is contractually defined and system-enforced</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Auto</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">3</div>
+          <div class="ps-body"><div class="ps-title">Acknowledgement tracking</div><div class="ps-desc">PMSimplex records the date and time each addressee opens and acknowledges the transmittal. If a required acknowledgement is not received within the contractually defined window (typically 48h), an automatic reminder is sent. The complete acknowledgement record is archived as contractual proof of delivery.</div><div class="ps-gain">Contractual delivery proof — eliminates "we never received it" disputes</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">48h window</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">4</div>
+          <div class="ps-body"><div class="ps-title">Permanent archive — full document package</div><div class="ps-desc">The complete W24 package is permanently archived: final report PDF, P6 snapshot with data date, EVM snapshot, transmittal record, and acknowledgements. Every element is cryptographically timestamped. The package constitutes the evidentiary record for any future audit, contractual dispute, or regulatory inspection — retrievable in under 10 seconds by document number, period, or metadata.</div><div class="ps-gain">SONATRACH / ENI compliance ready — full audit trail from field entry to client acknowledgement</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex DMS</div><div class="ps-time">Permanent</div></div>
+        </div>
+        <div class="process-step">
+          <div class="ps-num">5</div>
+          <div class="ps-body"><div class="ps-title">Cycle close — W25 opens automatically</div><div class="ps-desc">On distribution confirmation, PMSimplex closes the W24 cycle, updates the KPI trend dashboard, and automatically opens the W25 collection window. Discipline leads receive their W25 notification the following Sunday at 18:00. The cycle is self-perpetuating — no manual reset required.</div><div class="ps-gain">Continuous, self-managing cycle — no human intervention to open the next reporting period</div></div>
+          <div class="ps-meta"><div class="ps-owner">PMSimplex</div><div class="ps-time">Auto</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archive record template -->
+    <div class="templates-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#EDEAFC">🗄</div>
+        <div class="section-header-title">Document template — DMS Archive Record (auto-generated)</div>
+        <div class="section-header-sub">Permanent record · Audit base · Claims evidence</div>
+      </div>
+      <div style="padding:20px">
+        <div class="tpl-preview">
+          <table>
+            <thead><tr><th>Field</th><th>Value</th><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Document No.</td><td class="num" style="color:#4C45B8">SRW14-WR-2026-W24-A</td><td>Archive ID</td><td class="num" style="color:#4C45B8">SRW14-W24-ARCH-0247</td></tr>
+              <tr><td>Title</td><td>Weekly Progress Report W24/2026</td><td>Project</td><td>SRW-14</td></tr>
+              <tr><td>Revision</td><td>A — First issue</td><td>Period covered</td><td>10–16 Jun 2026</td></tr>
+              <tr><td>Data date</td><td class="num">15 Jun 2026</td><td>Issue date</td><td class="num">16 Jun 2026 14:22</td></tr>
+              <tr><td>Originator</td><td>[Planning Engineer]</td><td>Approved by</td><td>[PM] — 16 Jun 2026 14:18</td></tr>
+              <tr><td>P6 snapshot</td><td class="num" style="color:#0A7B5C">SRW14-W24-SCH-002 ✓</td><td>EVM snapshot</td><td class="num" style="color:#0A7B5C">SRW14-W24-EVM-003 ✓</td></tr>
+              <tr><td>Transmittal</td><td class="num" style="color:#0A7B5C">SRW14-TBE-2026-0247 ✓</td><td>Acknowledgements</td><td><span class="cell-pill pill-a">2/3 received</span></td></tr>
+              <tr><td>Timestamp</td><td class="num">2026-06-16T14:22:07Z</td><td>Hash (SHA-256)</td><td class="num" style="font-size:9px;color:#9096AB">a7f3c9...d12e (immutable)</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;padding:8px 10px;background:#E5F7F1;border-left:3px solid #0A7B5C;border-radius:4px;font-size:11px;color:#0A7B5C;font-weight:500">✓ Cycle W24 closed · W25 collection window opens Sunday 22 Jun 2026 at 18:00 · Discipline leads will be notified automatically</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- V07 — CADENCE & GAINS SUMMARY                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view-panel" id="view-7">
+  <div class="view-header">
+    <div class="view-header-top">
+      <div class="view-title-block">
+        <div class="view-title">V07 — Weekly Cadence &amp; PMSimplex Gains</div>
+        <div class="view-desc">The numbers behind the process. PMSimplex does not just automate tasks — it changes what project controls teams spend their time on. Instead of aggregating data and reformatting spreadsheets, the Planning Engineer is free to interpret results, challenge anomalies, and engage with the PM on decisions. The gain is not only efficiency — it is the quality of attention directed at the project.</div>
+      </div>
+    </div>
+    <div class="view-meta">
+      <span class="meta-chip chip-warn">⚠ Traditional: 3–4 days · 3–4 people · fragile Excel · no single source of truth</span>
+      <span class="meta-chip chip-good">✓ PMSimplex: 6h cycle · 1 Planning Eng · deterministic engine · full audit trail</span>
+    </div>
+  </div>
+  <div class="view-body">
+
+    <!-- Timeline full detail -->
+    <div class="timeline-wrap">
+      <div class="timeline-title">Detailed weekly cadence — all actors · all steps · Sun 18:00 → Tue 17:00</div>
+      <div style="overflow-x:auto">
+        <svg viewBox="0 0 980 220" xmlns="http://www.w3.org/2000/svg" style="min-width:700px;width:100%">
+          <!-- Track background -->
+          <rect x="0" y="0" width="980" height="220" fill="#F8F9FC" rx="0"/>
+          <!-- Day bands -->
+          <rect x="0"   y="0" width="310" height="220" fill="#FFFBF0" opacity=".5"/>
+          <rect x="310" y="0" width="480" height="220" fill="#F5F4FE" opacity=".4"/>
+          <rect x="790" y="0" width="190" height="220" fill="#F0FBF7" opacity=".5"/>
+          <text x="8"   y="16" font-family="IBM Plex Mono" font-size="9" font-weight="700" fill="#B56A00">SUNDAY</text>
+          <text x="318" y="16" font-family="IBM Plex Mono" font-size="9" font-weight="700" fill="#4C45B8">MONDAY</text>
+          <text x="798" y="16" font-family="IBM Plex Mono" font-size="9" font-weight="700" fill="#0A7B5C">TUESDAY</text>
+          <!-- Vertical time markers -->
+          <line x1="310" y1="0" x2="310" y2="220" stroke="#E0E2E8" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="790" y1="0" x2="790" y2="220" stroke="#E0E2E8" stroke-width="1" stroke-dasharray="4 3"/>
+          <!-- Sub-time lines -->
+          <line x1="460" y1="20" x2="460" y2="220" stroke="#E0E2E8" stroke-width=".5" stroke-dasharray="2 4"/>
+          <line x1="610" y1="20" x2="610" y2="220" stroke="#E0E2E8" stroke-width=".5" stroke-dasharray="2 4"/>
+          <text x="468" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">12h</text>
+          <text x="618" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">17h</text>
+          <!-- Time labels -->
+          <text x="8"   y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">18:00</text>
+          <text x="250" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">23:59</text>
+          <text x="310" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">08:00</text>
+          <text x="790" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">08:00</text>
+          <text x="930" y="32" font-family="IBM Plex Mono" font-size="8" fill="#9096AB">17:00</text>
+
+          <!-- ROW: Discipline Leads -->
+          <text x="8" y="58" font-family="IBM Plex Mono" font-size="8" font-weight="600" fill="#4A4D62">DISC. LEADS</text>
+          <rect x="8" y="62" width="300" height="22" rx="4" fill="#FEF3DC" stroke="#B56A00" stroke-width="1"/>
+          <text x="158" y="77" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#B56A00">Progress entry (WBS % · status · blockers)</text>
+
+          <!-- ROW: Planning Engineer -->
+          <text x="8" y="104" font-family="IBM Plex Mono" font-size="8" font-weight="600" fill="#4A4D62">PLANNING ENG.</text>
+          <rect x="310" y="108" width="82" height="22" rx="4" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1"/>
+          <text x="351" y="123" text-anchor="middle" font-family="Inter" font-size="8" font-weight="600" fill="#4C45B8">XER upload</text>
+          <rect x="398" y="108" width="62" height="22" rx="4" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1"/>
+          <text x="429" y="123" text-anchor="middle" font-family="Inter" font-size="8" font-weight="600" fill="#4C45B8">Oversight</text>
+          <rect x="466" y="108" width="144" height="22" rx="4" fill="#E5F7F1" stroke="#0A7B5C" stroke-width="1"/>
+          <text x="538" y="123" text-anchor="middle" font-family="Inter" font-size="8" font-weight="600" fill="#0A7B5C">Review AI draft → finalise V2</text>
+          <rect x="790" y="108" width="100" height="22" rx="4" fill="#F5F4FE" stroke="#4C45B8" stroke-width="1"/>
+          <text x="840" y="123" text-anchor="middle" font-family="Inter" font-size="8" font-weight="600" fill="#4C45B8">Monitor distrib.</text>
+
+          <!-- ROW: PMSimplex Engine -->
+          <text x="8" y="150" font-family="IBM Plex Mono" font-size="8" font-weight="600" fill="#4C45B8">PMSIMPLEX ENGINE</text>
+          <rect x="8"   y="154" width="300" height="22" rx="4" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.5"/>
+          <text x="158" y="169" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#4C45B8">Auto-validation · consistency check · snapshot</text>
+          <rect x="310" y="154" width="148" height="22" rx="4" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.5"/>
+          <text x="384" y="169" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#4C45B8">CPM recalc · EVM &lt;30s · AI draft</text>
+          <rect x="790" y="154" width="185" height="22" rx="4" fill="#EDEAFC" stroke="#4C45B8" stroke-width="1.5"/>
+          <text x="882" y="169" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#4C45B8">DMS register · distribute · archive</text>
+
+          <!-- ROW: PM -->
+          <text x="8" y="196" font-family="IBM Plex Mono" font-size="8" font-weight="600" fill="#4A4D62">PROJECT MANAGER</text>
+          <rect x="616" y="200" width="172" height="16" rx="4" fill="#E5F7F1" stroke="#0A7B5C" stroke-width="1"/>
+          <text x="702" y="212" text-anchor="middle" font-family="Inter" font-size="8" font-weight="600" fill="#0A7B5C">Review draft → formal approval → sign Rev A</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="swimlane-section">
+      <div class="section-header">
+        <div class="section-header-icon" style="background:#EDEAFC">📊</div>
+        <div class="section-header-title">Detailed comparison — Traditional approach vs PMSimplex</div>
+        <div class="section-header-sub">8 dimensions · quantified gains</div>
+      </div>
+      <div style="padding:20px">
+        <table class="compare-table" style="width:100%">
+          <thead>
+            <tr>
+              <th style="width:200px">Dimension</th>
+              <th class="col-trad">Traditional Approach</th>
+              <th class="col-pms">PMSimplex</th>
+              <th class="col-gain">Gain</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cycle duration</td>
+              <td class="trad">3 to 4 working days<br><span style="font-size:10px;color:#9096AB">from first email to client delivery</span></td>
+              <td class="pms">6 hours<br><span style="font-size:10px;color:#7B74D4">Sun 18h → Tue 17h</span></td>
+              <td class="gain">↓ 85%</td>
+            </tr>
+            <tr>
+              <td>Progress collection</td>
+              <td class="trad">Emails + unstructured Excel<br><span style="font-size:10px;color:#9096AB">no method enforcement, version conflicts</span></td>
+              <td class="pms">Structured forms + auto-validation<br><span style="font-size:10px;color:#7B74D4">measurement method locked to baseline</span></td>
+              <td class="gain">Zero errors</td>
+            </tr>
+            <tr>
+              <td>P6 schedule update</td>
+              <td class="trad">Manual entry 2–3h<br><span style="font-size:10px;color:#9096AB">constraint errors go undetected</span></td>
+              <td class="pms">XER import + auto CPM &lt;30 min<br><span style="font-size:10px;color:#7B74D4">constraint check automatic</span></td>
+              <td class="gain">↓ 80%</td>
+            </tr>
+            <tr>
+              <td>EVM calculation</td>
+              <td class="trad">Excel 2–3h, fragile formulas<br><span style="font-size:10px;color:#9096AB">wrong methods, SPI(t) absent</span></td>
+              <td class="pms">Deterministic engine &lt;30 sec<br><span style="font-size:10px;color:#7B74D4">6 methods, SPI(t) included</span></td>
+              <td class="gain">↓ 99%</td>
+            </tr>
+            <tr>
+              <td>Report drafting</td>
+              <td class="trad">3–4h manual copy-paste<br><span style="font-size:10px;color:#9096AB">sections inconsistent with data</span></td>
+              <td class="pms">Auto-compiled + AI narrative &lt;5 min<br><span style="font-size:10px;color:#7B74D4">data-anchored, human-reviewed</span></td>
+              <td class="gain">↓ 80%</td>
+            </tr>
+            <tr>
+              <td>Approval &amp; traceability</td>
+              <td class="trad">Email circuit, no version control<br><span style="font-size:10px;color:#9096AB">no audit trail for disputes</span></td>
+              <td class="pms">Integrated workflow, e-signature<br><span style="font-size:10px;color:#7B74D4">full revision history, timestamped</span></td>
+              <td class="gain">100% traceable</td>
+            </tr>
+            <tr>
+              <td>Audit / claims readiness</td>
+              <td class="trad">Laborious reconstruction<br><span style="font-size:10px;color:#9096AB">data often lost or inconsistent</span></td>
+              <td class="pms">Immutable snapshot per step<br><span style="font-size:10px;color:#7B74D4">retrievable in &lt;10 sec</span></td>
+              <td class="gain">Native</td>
+            </tr>
+            <tr>
+              <td>Headcount required</td>
+              <td class="trad">3–4 people + heavy coordination<br><span style="font-size:10px;color:#9096AB">Planning Eng, Scheduler, Cost Eng, DC</span></td>
+              <td class="pms">1 Planning Engineer + PM (approval)<br><span style="font-size:10px;color:#7B74D4">others released for field analysis</span></td>
+              <td class="gain">↓ 70%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Architecture note -->
+    <div style="background:var(--purple-bg);border:1.5px solid rgba(76,69,184,.2);border-radius:var(--radius-lg);padding:20px 24px">
+      <div style="font-size:12px;font-weight:700;color:var(--purple-d);margin-bottom:10px;letter-spacing:.01em">PMSimplex Architecture — Why deterministic first, AI second</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;font-size:12px;color:var(--text2);line-height:1.7">
+        <div><strong style="color:var(--text)">The fundamental rule:</strong> In O&G and EPC environments, every number in a progress report is a potential evidence point in a contractual dispute. You cannot afford to have those numbers generated by a probabilistic language model. PMSimplex computes EVM, CPM, and float with a deterministic engine — the same input always produces the same output, verifiable by any auditor.</div>
+        <div><strong style="color:var(--text)">Where AI earns its place:</strong> Narrative generation — translating structured data into clear, professional prose — is exactly where LLMs have genuine comparative advantage over engineers. PMSimplex uses AI for the executive summary, discipline narratives, and blocker descriptions only. The numbers that feed those narratives come from the engine, not the model.</div>
+        <div><strong style="color:var(--text)">The validation gate:</strong> No AI-generated content reaches the client without passing through the Planning Engineer's review and the PM's formal approval. PMSimplex makes the boundary explicit in the workflow — the AI generates a draft, a human validates it, and only the validated version carries an official revision index.</div>
+      </div>
+    </div>
+
+    <!-- Final KPI summary -->
+    <div class="kpi-row">
+      <div class="kpi-card good"><div class="kpi-label">Cycle time</div><div class="kpi-value">6h</div><div class="kpi-sub">vs 3–4 days traditional</div><div class="kpi-delta up">↓ 85% reduction</div></div>
+      <div class="kpi-card good"><div class="kpi-label">EVM errors</div><div class="kpi-value">Zero</div><div class="kpi-sub">Deterministic engine</div><div class="kpi-delta up">vs Excel formula risk</div></div>
+      <div class="kpi-card purple"><div class="kpi-label">Meas. methods</div><div class="kpi-value">6</div><div class="kpi-sub">Locked per activity</div><div class="kpi-delta up">incl. SPI(t) Earned Schedule</div></div>
+      <div class="kpi-card good"><div class="kpi-label">Traceability</div><div class="kpi-value">100%</div><div class="kpi-sub">Field → client receipt</div><div class="kpi-delta up">every step timestamped</div></div>
+      <div class="kpi-card info"><div class="kpi-label">Headcount</div><div class="kpi-value">↓ 70%</div><div class="kpi-sub">1 Eng + PM approval</div><div class="kpi-delta up">team freed for analysis</div></div>
+      <div class="kpi-card purple"><div class="kpi-label">AI boundary</div><div class="kpi-value">Narrative</div><div class="kpi-sub">Data stays in engine</div><div class="kpi-delta up">human validation mandatory</div></div>
+    </div>
+  </div>
+</div>
+
+  </div><!-- end content -->
+</main>
+
+<script>
+const VIEWS = [
+  { step:'V00', title:'Introduction & Process Overview',         deadline:'Full cycle: Sun 18h → Tue 17h' },
+  { step:'V01', title:'Field Data Collection',                  deadline:'Window: Sun 18:00 → Mon 08:00' },
+  { step:'V02', title:'P6 Schedule Update',                     deadline:'Window: Mon 08:00 → 10:00' },
+  { step:'V03', title:'EVM Calculation & KPIs',                 deadline:'Window: Mon 10:00 → 12:00' },
+  { step:'V04', title:'Weekly Report Drafting',                 deadline:'Window: Mon 12:00 → 17:00' },
+  { step:'V05', title:'Review & Approval',                      deadline:'Window: Tue 08:00 → 12:00' },
+  { step:'V06', title:'Distribution & DMS Archiving',          deadline:'Window: Tue 12:00 → 17:00' },
+  { step:'V07', title:'Weekly Cadence & PMSimplex Gains',       deadline:'Summary: 6h full cycle'},
+];
+let current = 0;
+function showView(idx){
+  if(idx<0||idx>=VIEWS.length) return;
+  document.querySelectorAll('.view-panel').forEach((el,i)=>el.classList.toggle('active',i===idx));
+  document.querySelectorAll('.nav-item').forEach((el,i)=>el.classList.toggle('active',i===idx));
+  document.getElementById('topbar-step').textContent    = VIEWS[idx].step;
+  document.getElementById('topbar-title').textContent   = VIEWS[idx].title;
+  document.getElementById('topbar-deadline').textContent= VIEWS[idx].deadline;
+  document.getElementById('content').scrollTop = 0;
+  current = idx;
+}
+function nextView(){ showView((current+1)%VIEWS.length); }
+function prevView(){ showView((current-1+VIEWS.length)%VIEWS.length); }
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') nextView();
+  if(e.key==='ArrowLeft')  prevView();
+});
+</script>
+</body>
+</html>
